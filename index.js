@@ -1,27 +1,15 @@
-const { smsBody, smsHeader, mwHeader, MWURL, REPORT, mwBody, SMSURL } = require("./util/constants");
+const { smsBody, smsHeader, REPORT, SMSURL } = require("./util/constants");
 const { getReport, getToken } = require("./util/moTVCalls");
 const excel = require('excel4node');
 require('dotenv').config();
+const date = new Date();
 
 const LOGINSMS = process.env.loginSMS
 const SECRETSMS = process.env.secretSMS
-const LOGINMW = process.env.loginMW
-const SECRETMW = process.env.secretMW
 
 const automation = () => getReport(
-    MWURL+REPORT,
-    mwBody(69, '2022/03/24'),
-    mwHeader(
-        getToken(
-            LOGINMW, 
-            SECRETMW
-        )
-    )
-)
-
-const automation2 = () => getReport(
     SMSURL+REPORT,
-    smsBody(113, '2022/03/24'),
+    smsBody(113, `${date.toISOString().split('T')[0]}`),
     smsHeader(
         getToken(
             LOGINSMS, 
@@ -30,26 +18,28 @@ const automation2 = () => getReport(
     )
 )
 
+
 let temp = '';
 const array = [];
-automation().then(mw => {
-    automation2().then(sms => {
-        writeFile(sms.response.rows);
-        for(let i=0; i < sms.response.rows.length; i++){
-            for(let y=1; y <= mw.response.rows.length; y++) {
-                if(y === mw.response.rows.length){
-                    if(temp != sms.response.rows[i]['Login']){
-                        if(sms.response.rows[i]['cancelled'] === 0){
-                            array.push(sms.response.rows[i]['Login']);
-                            console.log(sms.response.rows[i]['Login']);
-                        }
-                    }
-                    temp = sms.response.rows[i]['Login'];
-                }
+automation().then(sms => {
+    const dealers = new Set();
+    sms.response.rows.forEach(r => dealers.add(r['Dealer']) );
+
+    const groupedReport = [];
+    dealers.forEach(d => {
+        const dealer = {};
+        dealer.dealer = d;
+        dealer.customers = [];
+        sms.response.rows.forEach(report => {
+            if(report['Dealer']===d){
+                dealer.customers.push(report);
             }
-        }
-        console.log(array.length);
-    })
+        })
+        groupedReport.push(dealer);
+    });
+
+    groupedReport.forEach(t=>console.log(t.dealer+" Customers: "+t.customers.length));
+    console.log(dealers.size);
 })
 
 const writeFile = (report) => {
