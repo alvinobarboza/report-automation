@@ -16,31 +16,50 @@ const automation = () => getReport(
             SECRETSMS
         )
     )
-)
+);
 
+const groupByGeneric = (ungrouped, delimiter, dataToGroup) => {
+    const group = new Set();
+    ungrouped.forEach(r => group.add(r[delimiter]));
+    const groupedValues = [];
+    group.forEach(d => {
+        const value = {};
+        value[delimiter] = d;
+        value[dataToGroup] = [];
+        ungrouped.forEach(e => {
+            if(e[delimiter] === d){
+                value[dataToGroup].push(e)
+            }
+        });
+        groupedValues.push(value);
+    });
+    return groupedValues;
+}
+
+const groupByDealerByCustomer = (ungroupedList) => {
+    const groupedByDealer = groupByGeneric(ungroupedList, 'dealer', 'customers');
+    groupedByDealer.forEach((dealer, index) => {
+        const customers = groupByGeneric(dealer.customers, 'login', 'products');
+        groupedByDealer[index].customers.splice(0,groupedByDealer[index].customers.length);
+        customers.forEach(c => groupedByDealer[index].customers.push(c));
+    });
+    return groupedByDealer;
+}
 
 let temp = '';
 const array = [];
-automation().then(sms => {
-    const dealers = new Set();
-    sms.response.rows.forEach(r => dealers.add(r['Dealer']) );
+automation().then(sms => {    
+    const groupedData = groupByDealerByCustomer(sms.response.rows);
 
-    const groupedReport = [];
-    dealers.forEach(d => {
-        const dealer = {};
-        dealer.dealer = d;
-        dealer.customers = [];
-        sms.response.rows.forEach(report => {
-            if(report['Dealer']===d){
-                dealer.customers.push(report);
-            }
-        })
-        groupedReport.push(dealer);
+    groupedData.forEach(dealer => {
+        dealer.customers.forEach(customer => {
+            console.log(dealer.dealer);
+            console.table(customer.products)
+        });
     });
+});
 
-    groupedReport.forEach(t=>console.log(t.dealer+" Customers: "+t.customers.length));
-    console.log(dealers.size);
-})
+
 
 const writeFile = (report) => {
 
