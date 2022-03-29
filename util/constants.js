@@ -1,6 +1,14 @@
 const SMSURL = 'https://sms.yplay.com.br';
 const MWURL = 'https://mw.yplay.com.br';
 const REPORT = '/api/report/reportSelection';
+
+const SUCCESS = 'OK';
+const ERROR = 'ERRO';
+const BASIC = 'Basic';
+const COMPACT = 'Compact';
+const FULL = 'Full';
+const PREMIUM = 'Premium';
+
 const smsBody = (id, date) => `{
     "data":{
         "reports_id": ${id},
@@ -35,4 +43,10 @@ module.exports = {
     mwBody,
     mwHeader,
     smsHeader,
+    SUCCESS,
+    ERROR,
+    BASIC,
+    COMPACT,
+    FULL,
+    PREMIUM,
 }

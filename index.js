@@ -1,4 +1,4 @@
-const { smsBody, smsHeader, REPORT, SMSURL } = require("./util/constants");
+const { smsBody, smsHeader, REPORT, SMSURL, FULL } = require("./util/constants");
 const { getReport, getToken } = require("./util/moTVCalls");
 const excel = require('excel4node');
 require('dotenv').config();
@@ -18,6 +18,19 @@ const automation = () => getReport(
     )
 );
 
+/*
+Function to group array by delimiter informed:
+[...,{ name: 'jhon', car: 'x' }, { name: 'jhon', car: 'y' },...]
+
+delimiter = name
+dataToGroup = cars => this will generate a new array with all cars with the same 'name'
+
+Result:
+[...,{ name: 'jhon', cars: [{ name: 'jhon', car: 'x' }, { name: 'jhon', car: 'y' }] },....]
+It preserves all information, since i'll may need them for more manipulation later
+
+**Set used in a lazy way to have unique values, could be foreach check
+*/
 const groupByGeneric = (ungrouped, delimiter, dataToGroup) => {
     const group = new Set();
     ungrouped.forEach(r => group.add(r[delimiter]));
@@ -36,8 +49,14 @@ const groupByGeneric = (ungrouped, delimiter, dataToGroup) => {
     return groupedValues;
 }
 
+/*
+Using generec group twice
+*/
 const groupByDealerByCustomer = (ungroupedList) => {
     const groupedByDealer = groupByGeneric(ungroupedList, 'dealer', 'customers');
+
+    //Group customers together, empty customers from main array and push the new one one-by-one, 
+    //since if pushed customers group it is already an array, it would be [[...,...]]
     groupedByDealer.forEach((dealer, index) => {
         const customers = groupByGeneric(dealer.customers, 'login', 'products');
         groupedByDealer[index].customers.splice(0,groupedByDealer[index].customers.length);
@@ -46,21 +65,32 @@ const groupByDealerByCustomer = (ungroupedList) => {
     return groupedByDealer;
 }
 
-let temp = '';
-const array = [];
-automation().then(sms => {    
-    const groupedData = groupByDealerByCustomer(sms.response.rows);
+const checkYplayProduct = () => {
+   
+}
 
-    groupedData.forEach(dealer => {
-        dealer.customers.forEach(customer => {
-            console.log(dealer.dealer);
-            console.table(customer.products)
+const validateProducts = (customer) => {
+    let pacoteYplay = '';
+    let pacoteYplayStatus = '';
+    customer.products.forEach(product => {
+        if(product.product.includes(FULL)){
+            console.table([customer.login, product.product]);
+        }
+    });
+    return { pacoteYplayStatus, pacoteYplay };
+}
+/*
+automation().then(sms => {
+    const groupedData = groupByDealerByCustomer(sms.response.rows);
+    groupedData.forEach((dealer, indexD) => {
+        dealer.customers.forEach((customer, indexC) => {
+            const { pacoteYplayStatus, pacoteYplay } = validateProducts(customer); 
+            groupedData[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
+            groupedData[indexD].customers[indexC].pacoteYplay = pacoteYplay;
         });
     });
 });
-
-
-
+*/
 const writeFile = (report) => {
 
     const workbook = new excel.Workbook();
