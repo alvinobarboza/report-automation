@@ -1,4 +1,4 @@
-const { smsBody, smsHeader, REPORT, SMSURL, FULL } = require("./util/constants");
+const { smsBody, smsHeader, REPORT, SMSURL, FULL, BASIC, COMPACT, PREMIUM, ERROR, switchCase, SUCCESS } = require("./util/constants");
 const { getReport, getToken } = require("./util/moTVCalls");
 const excel = require('excel4node');
 require('dotenv').config();
@@ -9,7 +9,7 @@ const SECRETSMS = process.env.secretSMS
 
 const automation = () => getReport(
     SMSURL+REPORT,
-    smsBody(113, `${date.toISOString().split('T')[0]}`),
+    smsBody(119),
     smsHeader(
         getToken(
             LOGINSMS, 
@@ -65,21 +65,81 @@ const groupByDealerByCustomer = (ungroupedList) => {
     return groupedByDealer;
 }
 
-const checkYplayProduct = () => {
-   
-}
-
-const validateProducts = (customer) => {
+//Helper function to give final answer on what Yplay product it has - Check combination
+const validateYplayProduct = (validator) => {    
     let pacoteYplay = '';
     let pacoteYplayStatus = '';
-    customer.products.forEach(product => {
-        if(product.product.includes(FULL)){
-            console.table([customer.login, product.product]);
+
+    if((validator.basic+validator.light+validator.nacionais+validator.kids+validator.tvod)===5 && 
+    (validator.full+validator.compact+validator.premium+validator.studios+validator.completo)===0)
+    {
+        pacoteYplay = BASIC;
+        pacoteYplayStatus = SUCCESS;
+    }
+    else if((validator.compact+validator.light+validator.nacionais+validator.kids+validator.studios+validator.tvod)===6 && 
+    (validator.full+validator.basic+validator.premium+validator.completo)===0)
+    {
+        pacoteYplay = COMPACT;
+        pacoteYplayStatus = SUCCESS;
+    }
+    else if((validator.full+validator.completo+validator.nacionais+validator.kids+validator.tvod)===5 && 
+    (validator.basic+validator.compact+validator.premium+validator.light+validator.studios)===0)
+    {
+        pacoteYplay = FULL;
+        pacoteYplayStatus = SUCCESS;
+    }
+    else if((validator.premium+validator.completo+validator.nacionais+validator.kids+validator.tvod+validator.studios)===6 && 
+    (validator.full+validator.compact+validator.basic+validator.light)===0)
+    {
+        pacoteYplay = PREMIUM;
+        pacoteYplayStatus = SUCCESS;
+    }
+    else 
+    {
+        pacoteYplay = ERROR;
+        pacoteYplayStatus = ERROR;
+    }    
+    return { pacoteYplay, pacoteYplayStatus };
+}
+
+//Helper function using object leteral to create a switch case
+const checkProduts = (caseTest, check) => {    
+    (switchCase[caseTest] || switchCase['default'])(check);
+}
+
+//Main function to validate wich products customers has
+const validateProducts = (customer) => {
+    const validator = {
+        basic: 0,
+        compact: 0,
+        full: 0,
+        premium: 0,
+        light: 0,
+        completo: 0,
+        kids: 0,
+        nacionais: 0,
+        studios: 0,
+        tvod: 0,
+        error: 0
+    }
+
+    customer.products.forEach(element => {
+        if(element.product.includes(FULL)){
+            validator.full = 1;
+        }else if(element.product.includes(BASIC)){
+            validator.basic = 1;
+        }else if(element.product.includes(COMPACT)){
+            validator.compact = 1;
+        }else if(element.product.includes(PREMIUM)){
+            validator.premium = 1;
+        }else{
+            checkProduts(element.product, validator)
         }
     });
-    return { pacoteYplayStatus, pacoteYplay };
+
+    return validateYplayProduct(validator);
 }
-/*
+
 automation().then(sms => {
     const groupedData = groupByDealerByCustomer(sms.response.rows);
     groupedData.forEach((dealer, indexD) => {
@@ -89,8 +149,8 @@ automation().then(sms => {
             groupedData[indexD].customers[indexC].pacoteYplay = pacoteYplay;
         });
     });
-});
-*/
+}); 
+
 const writeFile = (report) => {
 
     const workbook = new excel.Workbook();

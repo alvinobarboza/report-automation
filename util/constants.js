@@ -4,17 +4,45 @@ const REPORT = '/api/report/reportSelection';
 
 const SUCCESS = 'OK';
 const ERROR = 'ERRO';
+
 const BASIC = 'Basic';
 const COMPACT = 'Compact';
 const FULL = 'Full';
 const PREMIUM = 'Premium';
+const LIGHT = 'Yplay Light';
+const COMPLETO = 'YPlay Completo';
+const KIDS = 'SVOD Kids';
+const NACIONAIS = 'SVOD Nacional';
+const STUDIOS = 'SVOD Studio';
+const TVOD = 'TVOD';
 
-const smsBody = (id, date) => `{
+const switchCase = {
+    'Yplay Light': (t) => {
+        t.light = 1;
+    },
+    'YPlay Completo': (t) => {
+        t.completo = 1;
+    },
+    'SVOD Kids': (t) => {
+        t.kids = 1;
+    },
+    'SVOD Nacional': (t) => {
+        t.nacionais = 1;
+    },
+    'SVOD Studio': (t) => {
+        t.studios = 1;
+    },
+    'TVOD': (t) => {
+        t.tvod = 1;
+    },
+    'default': (t) => {
+        t.error = 0;
+    }        
+}
+
+const smsBody = (id) => `{
     "data":{
-        "reports_id": ${id},
-        "where":{
-            "data":"${date}"
-        }
+        "reports_id": ${id}
     }
 }`
 const mwBody = (id,date) => `{
@@ -49,4 +77,11 @@ module.exports = {
     COMPACT,
     FULL,
     PREMIUM,
+    LIGHT,
+    COMPLETO,
+    NACIONAIS,
+    STUDIOS,
+    TVOD,
+    KIDS,
+    switchCase
 }
