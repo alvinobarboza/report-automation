@@ -185,17 +185,28 @@ automation().then(sms => {
 
 const writeFile = (data) => {
 
-    const headerSheet = ['Brand', BASIC, COMPACT, FULL, PREMIUM, 'Total'];
+    const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, 'Total'];
+    const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação', ];
     
     const workbook = new excel.Workbook({
         defaultFont: {
             color: '#000000',
             size: 12
-        }
+        },
+        dateFormat: 'dd/mm/yyyy hh:mm:ss',
     });
 
-    const worksheet = workbook.addWorksheet('Resultado');
-    worksheet.column(2).setWidth(25);
+    const worksheetResult = workbook.addWorksheet('Resultado');
+    worksheetResult.column(2).setWidth(25);
+    worksheetResult.row(2).filter();
+
+    const worksheetAllCustomers = workbook.addWorksheet('TodosClientes');
+    worksheetAllCustomers.column(2).setWidth(25);
+    worksheetAllCustomers.column(3).setWidth(40);
+    worksheetAllCustomers.column(4).setWidth(35);
+    worksheetAllCustomers.column(5).setWidth(20);
+    worksheetAllCustomers.row(2).filter();
+
     const styleH = workbook.createStyle({
         alignment: {
             horizontal: ['center'],
@@ -207,9 +218,13 @@ const writeFile = (data) => {
             size: 12
         }
     });
+    
+    headerSheetResult.forEach((element, index) => {
+        worksheetResult.cell(2, (index+2)).string(element).style(styleH);
+    });
 
-    headerSheet.forEach((element, index) => {
-        worksheet.cell(2, (index+2)).string(element).style(styleH);
+    headerSheetAllcustomers.forEach((element, index) => {
+        worksheetAllCustomers.cell(2, (index+2)).string(element).style(styleH);
     });
 
     let rowCounter = 0;
@@ -226,34 +241,48 @@ const writeFile = (data) => {
             columns.forEach((column) => {
                 switch (column) {
                     case 'dealer':                
-                        worksheet.cell((rowCounter+3), (columnCount+2)).string(value[column].toUpperCase());
+                        worksheetResult.cell((rowCounter+3), (columnCount+2)).string(value[column].toUpperCase());
                         columnCount++;
                         break;        
                     case 'basicCount':
-                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]);
                         columnCount++;
                         break;
                     case 'compactCount':
-                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]);
                         columnCount++;
                         break;
                     case 'fullCount':
-                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]);
                         columnCount++;
                         break;
                     case 'premiumCount':
-                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]);
                         columnCount++;
                         break;
                     default:
                         break;
                 }
                 if(columnCount === 5){
-                    worksheet.cell((rowCounter+3), (columnCount+2)).formula(`=SUM(B${rowCounter+3}:F${rowCounter+3})`);
+                    worksheetResult.cell((rowCounter+3), (columnCount+2)).formula(`=SUM(B${rowCounter+3}:F${rowCounter+3})`);
                 }
             });
             rowCounter++;
         }
     });
+
+    let rowIndex = 0;
+    data.forEach(dealer => {
+        dealer.customers.forEach( customer => {
+            customer.products.forEach(product => {
+                worksheetAllCustomers.cell((rowIndex+3),2).string(dealer.dealer);
+                worksheetAllCustomers.cell((rowIndex+3),3).string(product.login);
+                worksheetAllCustomers.cell((rowIndex+3),4).string(product.product);
+                worksheetAllCustomers.cell((rowIndex+3),5).date(product.activation);
+                rowIndex++;
+            });
+        });        
+    });
+
     workbook.write('Excel.xlsx');
 }
