@@ -180,14 +180,27 @@ automation().then(sms => {
         groupedData[indexD].compactCount = compactCount;
         groupedData[indexD].premiumCount = premiumCount;
     });
+    writeFile(groupedData);
 }); 
 
-const writeFile = (report) => {
+const writeFile = (data) => {
 
-    const workbook = new excel.Workbook();
+    const headerSheet = ['Brand', BASIC, COMPACT, FULL, PREMIUM, 'Total'];
+    
+    const workbook = new excel.Workbook({
+        defaultFont: {
+            color: '#000000',
+            size: 12
+        }
+    });
 
-    const worksheet = workbook.addWorksheet('test');
+    const worksheet = workbook.addWorksheet('Resultado');
+    worksheet.column(2).setWidth(25);
     const styleH = workbook.createStyle({
+        alignment: {
+            horizontal: ['center'],
+            shrinkToFit: true,
+        },
         font: {
             color: '#000000',
             bold: true,
@@ -195,32 +208,52 @@ const writeFile = (report) => {
         }
     });
 
-    const style = workbook.createStyle({
-        font: {
-            color: '#000000',
-            size: 12
+    headerSheet.forEach((element, index) => {
+        worksheet.cell(2, (index+2)).string(element).style(styleH);
+    });
+
+    let rowCounter = 0;
+    data.forEach((value) => {
+        if(value.dealer !== 'ADMIN-YOUCAST' && 
+            value.dealer !== 'JACON dealer' && 
+            value.dealer !== 'TCM Telecom' &&
+            value.dealer !== 'Youcast CSMS' && 
+            value.dealer !== 'YPLAY' && 
+            value.dealer !== 'Z-Não-usar')
+        {
+            const columns = Object.keys(value);
+            let columnCount = 0;
+            columns.forEach((column) => {
+                switch (column) {
+                    case 'dealer':                
+                        worksheet.cell((rowCounter+3), (columnCount+2)).string(value[column].toUpperCase());
+                        columnCount++;
+                        break;        
+                    case 'basicCount':
+                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        columnCount++;
+                        break;
+                    case 'compactCount':
+                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        columnCount++;
+                        break;
+                    case 'fullCount':
+                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        columnCount++;
+                        break;
+                    case 'premiumCount':
+                        worksheet.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        columnCount++;
+                        break;
+                    default:
+                        break;
+                }
+                if(columnCount === 5){
+                    worksheet.cell((rowCounter+3), (columnCount+2)).formula(`=SUM(B${rowCounter+3}:F${rowCounter+3})`);
+                }
+            });
+            rowCounter++;
         }
     });
-
-    const keys = Object.keys(report[0]);
-    keys.forEach((element, index) => {
-        worksheet.cell(1, (index+1)).string(element).style(styleH);
-    });
-
-    report.forEach((data,row) => {
-        keys.forEach((r, column) => {
-            if(typeof data[r] === 'number'){
-                worksheet.cell((row+2), (column+1))
-                    .number(data[r])
-                    .style(style);
-            }else{
-                worksheet.cell((row+2), (column+1))
-                    .string(data[r])
-                    .style(style);
-            }
-        });
-        console.log(row);
-    });
-
     workbook.write('Excel.xlsx');
 }
