@@ -1,8 +1,19 @@
-const { smsBody, smsHeader, REPORT, SMSURL, FULL, BASIC, COMPACT, PREMIUM, ERROR, switchCase, SUCCESS } = require("./util/constants");
+const { 
+    smsBody, 
+    smsHeader, 
+    REPORT, 
+    SMSURL, 
+    FULL, 
+    BASIC, 
+    COMPACT, 
+    PREMIUM, 
+    ERROR, 
+    switchCase, 
+    SUCCESS 
+} = require("./util/constants");
 const { getReport, getToken } = require("./util/moTVCalls");
 const excel = require('excel4node');
 require('dotenv').config();
-const date = new Date();
 
 const LOGINSMS = process.env.loginSMS
 const SECRETSMS = process.env.secretSMS
@@ -21,7 +32,7 @@ const automation = () => getReport(
 /*
 Function to group array by delimiter informed:
 [...,{ name: 'jhon', car: 'x' }, { name: 'jhon', car: 'y' },...]
-
+EX:
 delimiter = name
 dataToGroup = cars => this will generate a new array with all cars with the same 'name'
 
@@ -56,7 +67,7 @@ const groupByDealerByCustomer = (ungroupedList) => {
     const groupedByDealer = groupByGeneric(ungroupedList, 'dealer', 'customers');
 
     //Group customers together, empty customers from main array and push the new one one-by-one, 
-    //since if pushed customers group it is already an array, it would be [[...,...]]
+    //since if pushed customers group, it is already an array, it would be [[...,...]]
     groupedByDealer.forEach((dealer, index) => {
         const customers = groupByGeneric(dealer.customers, 'login', 'products');
         groupedByDealer[index].customers.splice(0,groupedByDealer[index].customers.length);
@@ -107,7 +118,7 @@ const checkProduts = (caseTest, check) => {
     (switchCase[caseTest] || switchCase['default'])(check);
 }
 
-//Main function to validate wich products customers has
+//Main function to validate wich products customers has - *Needs to find a simpler way to do this
 const validateProducts = (customer) => {
     const validator = {
         basic: 0,
@@ -143,11 +154,31 @@ const validateProducts = (customer) => {
 automation().then(sms => {
     const groupedData = groupByDealerByCustomer(sms.response.rows);
     groupedData.forEach((dealer, indexD) => {
+        let basicCount = 0;
+        let fullCount = 0;
+        let compactCount = 0;
+        let premiumCount = 0;
         dealer.customers.forEach((customer, indexC) => {
             const { pacoteYplayStatus, pacoteYplay } = validateProducts(customer); 
             groupedData[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
             groupedData[indexD].customers[indexC].pacoteYplay = pacoteYplay;
+            if(pacoteYplay === BASIC){
+                basicCount++;
+            }
+            if(pacoteYplay === COMPACT){
+                compactCount++;
+            }
+            if(pacoteYplay === FULL){
+                fullCount++;
+            }
+            if(pacoteYplay === PREMIUM){
+                premiumCount++;
+            }
         });
+        groupedData[indexD].basicCount = basicCount;
+        groupedData[indexD].fullCount = fullCount;
+        groupedData[indexD].compactCount = compactCount;
+        groupedData[indexD].premiumCount = premiumCount;
     });
 }); 
 
