@@ -9,12 +9,7 @@ const BASIC = 'Basic';
 const COMPACT = 'Compact';
 const FULL = 'Full';
 const PREMIUM = 'Premium';
-const LIGHT = 'Yplay Light';
-const COMPLETO = 'YPlay Completo';
-const KIDS = 'SVOD Kids';
-const NACIONAIS = 'SVOD Nacional';
-const STUDIOS = 'SVOD Studio';
-const TVOD = 'TVOD';
+const URBANTV = 'UrbanTV';
 
 const switchCase = {
     'Yplay Light': (t) => {
@@ -34,6 +29,9 @@ const switchCase = {
     },
     'TVOD': (t) => {
         t.tvod = 1;
+    },
+    'Yplay UrbanTV': (t) => {
+        t.urban = 1;
     },
     'default': (t) => {
         t.error = 0;
@@ -77,11 +75,6 @@ module.exports = {
     COMPACT,
     FULL,
     PREMIUM,
-    LIGHT,
-    COMPLETO,
-    NACIONAIS,
-    STUDIOS,
-    TVOD,
-    KIDS,
+    URBANTV,
     switchCase
 }

@@ -9,7 +9,8 @@ const {
     PREMIUM, 
     ERROR, 
     switchCase, 
-    SUCCESS 
+    SUCCESS, 
+    URBANTV
 } = require("./util/constants");
 const { getReport, getToken } = require("./util/moTVCalls");
 const excel = require('excel4node');
@@ -80,6 +81,7 @@ const groupByDealerByCustomer = (ungroupedList) => {
 const validateYplayProduct = (validator) => {    
     let pacoteYplay = '';
     let pacoteYplayStatus = '';
+    let urban = validator.urban;
 
     if((validator.basic+validator.light+validator.nacionais+validator.kids+validator.tvod)===5 && 
     (validator.full+validator.compact+validator.premium+validator.studios+validator.completo)===0)
@@ -110,7 +112,7 @@ const validateYplayProduct = (validator) => {
         pacoteYplay = ERROR;
         pacoteYplayStatus = ERROR;
     }    
-    return { pacoteYplay, pacoteYplayStatus };
+    return { pacoteYplay, pacoteYplayStatus, urban };
 }
 
 //Helper function using object leteral to create a switch case
@@ -131,7 +133,7 @@ const validateProducts = (customer) => {
         nacionais: 0,
         studios: 0,
         tvod: 0,
-        error: 0
+        urban: 0
     }
 
     customer.products.forEach(element => {
@@ -143,7 +145,9 @@ const validateProducts = (customer) => {
             validator.compact = 1;
         }else if(element.product.includes(PREMIUM)){
             validator.premium = 1;
-        }else{
+        }else if(element.product.includes(URBANTV)){
+            validator.urban = 1;
+        }else {
             checkProduts(element.product, validator)
         }
     });
@@ -151,41 +155,9 @@ const validateProducts = (customer) => {
     return validateYplayProduct(validator);
 }
 
-automation().then(sms => {
-    const groupedData = groupByDealerByCustomer(sms.response.rows);
-    groupedData.forEach((dealer, indexD) => {
-        let basicCount = 0;
-        let fullCount = 0;
-        let compactCount = 0;
-        let premiumCount = 0;
-        dealer.customers.forEach((customer, indexC) => {
-            const { pacoteYplayStatus, pacoteYplay } = validateProducts(customer); 
-            groupedData[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
-            groupedData[indexD].customers[indexC].pacoteYplay = pacoteYplay;
-            if(pacoteYplay === BASIC){
-                basicCount++;
-            }
-            if(pacoteYplay === COMPACT){
-                compactCount++;
-            }
-            if(pacoteYplay === FULL){
-                fullCount++;
-            }
-            if(pacoteYplay === PREMIUM){
-                premiumCount++;
-            }
-        });
-        groupedData[indexD].basicCount = basicCount;
-        groupedData[indexD].fullCount = fullCount;
-        groupedData[indexD].compactCount = compactCount;
-        groupedData[indexD].premiumCount = premiumCount;
-    });
-    writeFile(groupedData);
-}); 
-
 const writeFile = (data) => {
 
-    const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, 'Total'];
+    const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, URBANTV, 'Total'];
     const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação', ];
     
     const workbook = new excel.Workbook({
@@ -260,11 +232,15 @@ const writeFile = (data) => {
                         worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]);
                         columnCount++;
                         break;
+                    case 'urbanTv':
+                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]);
+                        columnCount++;
+                        break;
                     default:
                         break;
                 }
-                if(columnCount === 5){
-                    worksheetResult.cell((rowCounter+3), (columnCount+2)).formula(`=SUM(B${rowCounter+3}:F${rowCounter+3})`);
+                if(columnCount === 6){
+                    worksheetResult.cell((rowCounter+3), (columnCount+2)).formula(`=SUM(C${rowCounter+3}:G${rowCounter+3})`);
                 }
             });
             rowCounter++;
@@ -286,3 +262,58 @@ const writeFile = (data) => {
 
     workbook.write('Excel.xlsx');
 }
+
+automation().then(sms => {
+    const groupedData = groupByDealerByCustomer(sms.response.rows);
+    groupedData.forEach((dealer, indexD) => {
+        let basicCount = 0;
+        let fullCount = 0;
+        let compactCount = 0;
+        let premiumCount = 0;
+        let urbanTv = 0;
+        dealer.customers.forEach((customer, indexC) => {
+            if(customer.login.toLowerCase().includes('demo')){
+                return;
+            }
+            if(customer.login.toLowerCase().includes('test')){
+                return;
+            }            
+            if(customer.login.toLowerCase().includes('youcast')){
+                return;
+            }            
+            if(customer.login.toLowerCase().includes('yc')){
+                return;
+            }
+            if(customer.login.toLowerCase().includes('trial')){
+                return;
+            }
+            if(customer.login.toLowerCase().includes('yplay')){
+                return;
+            }
+            const { pacoteYplayStatus, pacoteYplay, urban } = validateProducts(customer); 
+            groupedData[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
+            groupedData[indexD].customers[indexC].pacoteYplay = pacoteYplay;
+            if(pacoteYplay === BASIC){
+                basicCount++;
+            }
+            if(pacoteYplay === COMPACT){
+                compactCount++;
+            }
+            if(pacoteYplay === FULL){
+                fullCount++;
+            }
+            if(pacoteYplay === PREMIUM){
+                premiumCount++;
+            }
+            if(urban === 1){
+                urbanTv++;
+            }
+        });
+        groupedData[indexD].basicCount = basicCount;
+        groupedData[indexD].fullCount = fullCount;
+        groupedData[indexD].compactCount = compactCount;
+        groupedData[indexD].premiumCount = premiumCount;
+        groupedData[indexD].urbanTv = urbanTv;
+    });
+    writeFile(groupedData);
+}); 
