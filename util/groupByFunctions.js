@@ -34,7 +34,6 @@ Using generec group twice
 */
 const groupByDealerByCustomer = (ungroupedList) => {
     const groupedByDealer = groupByGeneric(ungroupedList, 'dealer', 'customers');
-
     //Group customers together, empty customers from main array and push the new one one-by-one, 
     //since if pushed customers group, it is already an array, it would be [[...,...]]
     groupedByDealer.forEach((dealer, index) => {

@@ -5,6 +5,7 @@ const headerStyle = {
     alignment: {
         horizontal: ['center'],
         shrinkToFit: true,
+        vertical: ['center']
     },
     font: {
         color: '#000000',
@@ -64,7 +65,7 @@ const dataStyle = {
     }
 }
 
-const writeFile = (data) => {
+const writeBrandReport = (data) => {
     const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, URBANTV, 'Total'];
     const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação', ];    
     const workbook = new excel.Workbook({
@@ -171,7 +172,51 @@ const writeFile = (data) => {
         });        
     });
 
-    workbook.write('Excel.xlsx');
+    workbook.write('RelatorioBrands.xlsx');
+}
+
+const writeProgramadorasReport = (data) => {
+
+    const date = new Date();
+    const nowDate = date.toLocaleDateString();
+    const lastMonth = date.setDate(date.getDate() - 30);
+    const lastMonthDate = new Date(lastMonth).toLocaleDateString();
+    const stringDate = lastMonthDate +' até '+ nowDate;
+
+    const constantValuesResultSheet = ['COMPÊTENCIA', 'NUMERO DE ASSINANTES', 'VALOR UNITARIO POR ASSINANTES', 'VALOR EM REAIS TOTAL A SER FATURADO (MG)'];
+    const testData = [stringDate, '1000', 'R$', 'R$'];
+
+    const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
+    const workbook = new excel.Workbook({
+        defaultFont: {
+            color: '#000000',
+            size: 12
+        },
+    });
+
+    const worksheetResult = workbook.addWorksheet('Operadora', {
+        sheetView: {
+            showGridLines: false
+        }
+    });
+    worksheetResult.row(1).setHeight(25);
+    worksheetResult.column(1).setWidth(45);
+    worksheetResult.column(2).setWidth(35);
+
+    worksheetResult.cell(1,1,1,2,true).string(MAINHEADER).style(headerStyle);
+    constantValuesResultSheet.forEach((value,index) => {
+        worksheetResult.cell((index+2),1).string(value).style(dataStyle);
+    });
+    testData.forEach((value, index)=>{
+        worksheetResult.cell((index+2),2).string(value).style({...dataStyle, alignment:{horizontal:['right']}});
+    })
+
+    workbook.write('RelatorioProgramadora.xlsx');
+}
+
+const writeFile = (data) => {
+    writeBrandReport(data);
+    writeProgramadorasReport(data);
 }
 
 module.exports = {
