@@ -8,9 +8,22 @@ const validation = require("./util/packageValidationFunctions");
 const LOGINSMS = process.env.loginSMS
 const SECRETSMS = process.env.secretSMS
 
-const automation = () => getReport(
+const REPORTBRAND = 119;
+const REPORTDEALERS = 126;
+
+const getCustomersData = () => getReport(
     SMSURL+REPORT,
-    smsBody(119),
+    smsBody(REPORTBRAND),
+    smsHeader(
+        getToken(
+            LOGINSMS, 
+            SECRETSMS
+        )
+    )
+);
+const getDealersData = () => getReport(
+    SMSURL+REPORT,
+    smsBody(REPORTDEALERS),
     smsHeader(
         getToken(
             LOGINSMS, 
@@ -19,8 +32,11 @@ const automation = () => getReport(
     )
 );
 
-automation().then(sms => {
-    const groupedData = groupByDealerByCustomer(sms.response.rows);
+Promise.all([getCustomersData(),getDealersData()]).then((result) => {
+    const [customers,dealers] = result; 
+    const groupedData = groupByDealerByCustomer(customers.response.rows);
     validation(groupedData);
-    writeFile(groupedData);
-}); 
+    writeFile(groupedData, dealers.response.rows);
+}).catch((err) => {
+    console.table(err);
+});

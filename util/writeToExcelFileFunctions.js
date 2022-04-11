@@ -118,7 +118,8 @@ const writeBrandReport = (data) => {
             value.dealer !== 'TCM Telecom' &&
             value.dealer !== 'Youcast CSMS' && 
             value.dealer !== 'YPLAY' && 
-            value.dealer !== 'Z-Não-usar')
+            value.dealer !== 'Z-Não-usar' && 
+            value.dealer !== 'softxx')
         {
             const columns = Object.keys(value);
             let columnCount = 0;
@@ -175,18 +176,135 @@ const writeBrandReport = (data) => {
     workbook.write('RelatorioBrands.xlsx');
 }
 
-const writeProgramadorasReport = (data) => {
+const writeProgramadorasReportSimba = (data, dealers) => {
+    const stringDate = getDate();
+    let amount = 0;
+    data.forEach(element => {
+        if(element.dealer !== 'ADMIN-YOUCAST' && 
+            element.dealer !== 'JACON dealer' && 
+            element.dealer !== 'TCM Telecom' &&
+            element.dealer !== 'Youcast CSMS' && 
+            element.dealer !== 'YPLAY' && 
+            element.dealer !== 'Z-Não-usar' && 
+            element.dealer !== 'softxx')
+        {
+            amount += element.basicCount + element.fullCount + element.compactCount + element.premiumCount;
+        }
+    });
 
-    const date = new Date();
-    const nowDate = date.toLocaleDateString();
-    const lastMonth = date.setDate(date.getDate() - 30);
-    const lastMonthDate = new Date(lastMonth).toLocaleDateString();
-    const stringDate = lastMonthDate +' até '+ nowDate;
-
-    const constantValuesResultSheet = ['COMPÊTENCIA', 'NUMERO DE ASSINANTES', 'VALOR UNITARIO POR ASSINANTES', 'VALOR EM REAIS TOTAL A SER FATURADO (MG)'];
-    const testData = [stringDate, '1000', 'R$', 'R$'];
-
+    const constantValuesResultSheetHeader = [
+        'COMPÊTENCIA', 
+        'NUMERO DE ASSINANTES', 
+        'VALOR UNITARIO POR ASSINANTES', 
+        'VALOR EM REAIS TOTAL A SER FATURADO (MG)'
+    ];
+    const constantValuesProvidersSheetHeader = [
+        'Provedor (nome fantasia)', 
+        'Razão social', 
+        'CNPJ', 
+        'Cidade',
+        'Estado',
+        'Número de assinantes'
+    ];
+    const tableData = [stringDate, amount, 'R$', 'R$'];
     const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
+
+    const workbook = new excel.Workbook({
+        defaultFont: {
+            color: '#000000',
+            size: 12
+        },
+    });
+
+    const worksheetResult = workbook.addWorksheet('Operadora', {
+        sheetView: {
+            showGridLines: false
+        }
+    });
+    worksheetResult.row(1).setHeight(25);
+    worksheetResult.column(1).setWidth(45);
+    worksheetResult.column(2).setWidth(35);
+
+    const worksheetProviders = workbook.addWorksheet('Provedores', {
+        sheetView: {
+            showGridLines: false
+        }
+    });
+    worksheetProviders.row(1).setHeight(25);    
+    worksheetProviders.row(1).filter();
+    worksheetProviders.column(1).setWidth(30);    
+    worksheetProviders.column(2).setWidth(45);
+    worksheetProviders.column(3).setWidth(25);
+    worksheetProviders.column(4).setWidth(25);
+    worksheetProviders.column(5).setWidth(10);
+    worksheetProviders.column(6).setWidth(30);
+
+    worksheetResult.cell(1,1,1,2,true).string(MAINHEADER).style(headerStyle);
+    constantValuesResultSheetHeader.forEach((value,index) => {
+        worksheetResult.cell((index+2),1).string(value).style(dataStyle);
+    });
+    constantValuesProvidersSheetHeader.forEach((value,index) => {
+        worksheetProviders.cell(1,(index+1)).string(value).style({...headerStyle, alignment:{horizontal:['center']}});
+    });
+
+    tableData.forEach((value, index)=>{
+        if(typeof value === 'number'){
+            worksheetResult.cell((index+2),2).number(value).style({...dataStyle, alignment:{horizontal:['right']}})
+        }else{
+            worksheetResult.cell((index+2),2).string(value).style({...dataStyle, alignment:{horizontal:['right']}})
+        }        
+    });
+
+    //============================================================================
+    let rowCounter = 0;
+    data.forEach((value) => {
+        if(value.dealer !== 'ADMIN-YOUCAST' && 
+            value.dealer !== 'JACON dealer' && 
+            value.dealer !== 'TCM Telecom' &&
+            value.dealer !== 'Youcast CSMS' && 
+            value.dealer !== 'YPLAY' && 
+            value.dealer !== 'Z-Não-usar' && 
+            value.dealer !== 'softxx')
+        {            
+            let countCustomers = 0;
+            countCustomers += value.basicCount + value.fullCount + value.compactCount + value.premiumCount;
+            if(countCustomers){
+                dealers.forEach((dealer)=>{
+                    if(value.customers[0].products[0].dealerid === dealer.id){
+                        worksheetProviders.cell((rowCounter+2),1).string(dealer.nomefantasia).style({...dataStyle, alignment:{horizontal:['left']}});
+                        worksheetProviders.cell((rowCounter+2),2).string(dealer.razaosocial).style({...dataStyle, alignment:{horizontal:['left']}});
+                        worksheetProviders.cell((rowCounter+2),3).string(dealer.cnpj).style({...dataStyle, alignment:{horizontal:['center']}});
+                        worksheetProviders.cell((rowCounter+2),4).string(dealer.cidade).style({...dataStyle, alignment:{horizontal:['left']}});
+                        worksheetProviders.cell((rowCounter+2),5).string(dealer.uf).style({...dataStyle, alignment:{horizontal:['center']}});
+                        worksheetProviders.cell((rowCounter+2),6).number(countCustomers).style({...dataStyle, alignment:{horizontal:['center']}});
+                    }
+                })
+                rowCounter++;
+            }
+        }
+    });
+
+    //============================================================================
+
+    workbook.write('RelatorioProgramadoraSIMBA.xlsx'); 
+}
+
+const writeProgramadorasReportGeneric = (data) => {
+    const stringDate = getDate();
+    let amount = 0;
+    data.forEach(element => {
+        amount += element.basicCount + element.fullCount + element.compactCount + element.premiumCount;
+    });
+
+    const constantValuesResultSheet = [
+        'COMPÊTENCIA', 
+        'NUMERO DE ASSINANTES', 
+        'VALOR UNITARIO POR ASSINANTES', 
+        'VALOR EM REAIS TOTAL A SER FATURADO (MG)'
+    ];
+    const tableData = [stringDate, amount, 'R$', 'R$'];
+    const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
+
     const workbook = new excel.Workbook({
         defaultFont: {
             color: '#000000',
@@ -207,16 +325,30 @@ const writeProgramadorasReport = (data) => {
     constantValuesResultSheet.forEach((value,index) => {
         worksheetResult.cell((index+2),1).string(value).style(dataStyle);
     });
-    testData.forEach((value, index)=>{
-        worksheetResult.cell((index+2),2).string(value).style({...dataStyle, alignment:{horizontal:['right']}});
+    tableData.forEach((value, index)=>{
+        if(typeof value === 'number'){
+            worksheetResult.cell((index+2),2).number(value).style({...dataStyle, alignment:{horizontal:['right']}})
+        }else{
+            worksheetResult.cell((index+2),2).string(value).style({...dataStyle, alignment:{horizontal:['right']}})
+        }        
     })
-
-    workbook.write('RelatorioProgramadora.xlsx');
+    //console.table(dealers);
+    workbook.write('RelatorioProgramadoraCNN.xlsx');    
+    workbook.write('RelatorioProgramadoraFISH.xlsx');
 }
 
-const writeFile = (data) => {
+const getDate = ()=>{
+    const date = new Date();
+    const nowDate = date.toLocaleDateString();
+    const lastMonth = date.setDate(date.getDate() - 30);
+    const lastMonthDate = new Date(lastMonth).toLocaleDateString();     
+    return lastMonthDate +' até '+ nowDate;
+}
+
+const writeFile = (data, dealers) => {
     writeBrandReport(data);
-    writeProgramadorasReport(data);
+    writeProgramadorasReportGeneric(data);
+    writeProgramadorasReportSimba(data, dealers);
 }
 
 module.exports = {
