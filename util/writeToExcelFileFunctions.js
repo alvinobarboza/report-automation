@@ -65,9 +65,65 @@ const dataStyle = {
     }
 }
 
+const dataStyleError = {
+    fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        bgColor: '#ec5120',
+        fgColor: '#ec5120',
+    },
+    border: { 
+        left: {
+            style: 'thin', 
+            color: '#000000' 
+        },
+        right: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        top: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        bottom: {
+            style: 'thin', 
+            color: '#000000'
+        },
+    }
+}
+
+const dataStyleOK = {
+    fill: {
+        type: 'pattern',
+        patternType: 'solid',
+        bgColor: '#a9d08e',
+        fgColor: '#a9d08e',
+    },
+    border: { 
+        left: {
+            style: 'thin', 
+            color: '#000000' 
+        },
+        right: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        top: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        bottom: {
+            style: 'thin', 
+            color: '#000000'
+        },
+    }
+}
+
 const writeBrandReport = (data) => {
     const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, URBANTV, 'Total'];
     const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação', ];    
+    const headerSheetAllcustomersValidation = ['Dealer', 'Customer', 'Pacote', 'Status', ];    
+
     const workbook = new excel.Workbook({
         defaultFont: {
             color: '#000000',
@@ -100,18 +156,31 @@ const writeBrandReport = (data) => {
     worksheetAllCustomers.column(5).setWidth(20);
     worksheetAllCustomers.row(2).filter();
 
-    const styleH = workbook.createStyle(headerStyle);
-    const styleBorder = workbook.createStyle(dataStyle);
+    const worksheetAllCustomersValidation = workbook.addWorksheet('TodosClientesValidacao',{
+        sheetView: {
+            showGridLines: false
+        }
+    });
+    worksheetAllCustomersValidation.row(2).filter();
+    worksheetAllCustomersValidation.column(2).setWidth(25);
+    worksheetAllCustomersValidation.column(3).setWidth(40);
+    worksheetAllCustomersValidation.column(4).setWidth(35);
+    worksheetAllCustomersValidation.column(5).setWidth(20);
     
     headerSheetResult.forEach((element, index) => {
-        worksheetResult.cell(2, (index+2)).string(element).style(styleH);
+        worksheetResult.cell(2, (index+2)).string(element).style(headerStyle);
     });
 
     headerSheetAllcustomers.forEach((element, index) => {
-        worksheetAllCustomers.cell(2, (index+2)).string(element).style(styleH);
+        worksheetAllCustomers.cell(2, (index+2)).string(element).style(headerStyle);
     });
 
+    headerSheetAllcustomersValidation.forEach((element, index) => {
+        worksheetAllCustomersValidation.cell(2, (index+2)).string(element).style(headerStyle);
+    });
+    
     let rowCounter = 0;
+    let rowCustomersCounter = 0;
     data.forEach((value) => {
         if(value.dealer !== 'ADMIN-YOUCAST' && 
             value.dealer !== 'JACON dealer' && 
@@ -126,36 +195,52 @@ const writeBrandReport = (data) => {
             columns.forEach((column) => {
                 switch (column) {
                     case 'dealer':                
-                        worksheetResult.cell((rowCounter+3), (columnCount+2)).string(value[column].toUpperCase()).style(styleBorder);
+                        worksheetResult.cell((rowCounter+3), 2).string(value[column].toUpperCase()).style(dataStyle);
                         columnCount++;
                         break;        
                     case 'basicCount':
-                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]).style(styleBorder);
+                        worksheetResult.cell((rowCounter+3), 3).number(value[column]).style(dataStyle);
                         columnCount++;
                         break;
                     case 'compactCount':
-                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]).style(styleBorder);
+                        worksheetResult.cell((rowCounter+3), 4).number(value[column]).style(dataStyle);
                         columnCount++;
                         break;
                     case 'fullCount':
-                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]).style(styleBorder);
+                        worksheetResult.cell((rowCounter+3), 5).number(value[column]).style(dataStyle);
                         columnCount++;
                         break;
                     case 'premiumCount':
-                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]).style(styleBorder);
+                        worksheetResult.cell((rowCounter+3), 6).number(value[column]).style(dataStyle);
                         columnCount++;
                         break;
                     case 'urbanTv':
-                        worksheetResult.cell((rowCounter+3), (columnCount+2)).number(value[column]).style(styleBorder);
+                        worksheetResult.cell((rowCounter+3), 7).number(value[column]).style(dataStyle);
                         columnCount++;
                         break;
                     default:
                         break;
                 }
                 if(columnCount === 6){
-                    worksheetResult.cell((rowCounter+3), (columnCount+2)).formula(`=SUM(C${rowCounter+3}:G${rowCounter+3})`).style(styleBorder);
+                    worksheetResult.cell((rowCounter+3), 8)
+                        .formula(`=SUM(C${rowCounter+3}:G${rowCounter+3})`).style(dataStyle);
                 }
             });
+            //Validation sheet
+            value.customers.forEach(customer => {                
+                worksheetAllCustomersValidation.cell((rowCustomersCounter+3),2)
+                    .string(value.dealer).style(dataStyle);
+                worksheetAllCustomersValidation.cell((rowCustomersCounter+3),3)
+                    .string(customer.login).style(dataStyle);
+                worksheetAllCustomersValidation.cell((rowCustomersCounter+3),4)
+                    .string(customer.pacoteYplay ? customer.pacoteYplay :'UserTest')
+                    .style(customer.pacoteYplayStatus === 'ERRO' ? dataStyleError : dataStyleOK);
+                worksheetAllCustomersValidation.cell((rowCustomersCounter+3),5)
+                    .string(customer.pacoteYplayStatus ? customer.pacoteYplayStatus : 'UserTest')
+                    .style(customer.pacoteYplayStatus === 'ERRO' ? dataStyleError : dataStyleOK);
+                rowCustomersCounter++;
+            });
+            //Validation sheet end
             rowCounter++;
         }
     });
@@ -164,10 +249,10 @@ const writeBrandReport = (data) => {
     data.forEach(dealer => {
         dealer.customers.forEach( customer => {
             customer.products.forEach(product => {
-                worksheetAllCustomers.cell((rowIndex+3),2).string(dealer.dealer).style(styleBorder);
-                worksheetAllCustomers.cell((rowIndex+3),3).string(product.login).style(styleBorder);
-                worksheetAllCustomers.cell((rowIndex+3),4).string(product.product).style(styleBorder);
-                worksheetAllCustomers.cell((rowIndex+3),5).date(product.activation).style(styleBorder);
+                worksheetAllCustomers.cell((rowIndex+3),2).string(dealer.dealer).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex+3),3).string(product.login).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex+3),4).string(product.product).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex+3),5).date(product.activation).style(dataStyle);
                 rowIndex++;
             });
         });        
@@ -188,7 +273,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             element.dealer !== 'Z-Não-usar' && 
             element.dealer !== 'softxx')
         {
-            amount += element.basicCount + element.fullCount + element.compactCount + element.premiumCount;
+            amount += element.fullCount + element.premiumCount;
         }
     });
 
@@ -244,14 +329,20 @@ const writeProgramadorasReportSimba = (data, dealers) => {
         worksheetResult.cell((index+2),1).string(value).style(dataStyle);
     });
     constantValuesProvidersSheetHeader.forEach((value,index) => {
-        worksheetProviders.cell(1,(index+1)).string(value).style({...headerStyle, alignment:{horizontal:['center']}});
+        worksheetProviders.cell(1,(index+1))
+            .string(value)
+            .style({...headerStyle, alignment:{horizontal:['center']}});
     });
 
     tableData.forEach((value, index)=>{
         if(typeof value === 'number'){
-            worksheetResult.cell((index+2),2).number(value).style({...dataStyle, alignment:{horizontal:['right']}})
+            worksheetResult.cell((index+2),2)
+                .number(value)
+                .style({...dataStyle, alignment:{horizontal:['right']}})
         }else{
-            worksheetResult.cell((index+2),2).string(value).style({...dataStyle, alignment:{horizontal:['right']}})
+            worksheetResult.cell((index+2),2)
+                .string(value)
+                .style({...dataStyle, alignment:{horizontal:['right']}})
         }        
     });
 
@@ -267,7 +358,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             value.dealer !== 'softxx')
         {            
             let countCustomers = 0;
-            countCustomers += value.basicCount + value.fullCount + value.compactCount + value.premiumCount;
+            countCustomers += value.fullCount + value.premiumCount;
             if(countCustomers){
                 dealers.forEach((dealer)=>{
                     if(value.customers[0].products[0].dealerid === dealer.id){
@@ -293,7 +384,16 @@ const writeProgramadorasReportGeneric = (data) => {
     const stringDate = getDate();
     let amount = 0;
     data.forEach(element => {
-        amount += element.basicCount + element.fullCount + element.compactCount + element.premiumCount;
+        if(element.dealer !== 'ADMIN-YOUCAST' && 
+            element.dealer !== 'JACON dealer' && 
+            element.dealer !== 'TCM Telecom' &&
+            element.dealer !== 'Youcast CSMS' && 
+            element.dealer !== 'YPLAY' && 
+            element.dealer !== 'Z-Não-usar' && 
+            element.dealer !== 'softxx')
+        {
+            amount += element.fullCount + element.premiumCount;
+        }
     });
 
     const constantValuesResultSheet = [
@@ -327,9 +427,13 @@ const writeProgramadorasReportGeneric = (data) => {
     });
     tableData.forEach((value, index)=>{
         if(typeof value === 'number'){
-            worksheetResult.cell((index+2),2).number(value).style({...dataStyle, alignment:{horizontal:['right']}})
+            worksheetResult.cell((index+2),2)
+                .number(value)
+                .style({...dataStyle, alignment:{horizontal:['right']}})
         }else{
-            worksheetResult.cell((index+2),2).string(value).style({...dataStyle, alignment:{horizontal:['right']}})
+            worksheetResult.cell((index+2),2)
+                .string(value)
+                .style({...dataStyle, alignment:{horizontal:['right']}})
         }        
     })
     //console.table(dealers);
