@@ -84,7 +84,10 @@ const validation = (data) => {
         let premiumCount = 0;
         let urbanTv = 0;
         dealer.customers.forEach((customer, indexC) => {
-            if(customer.login.toLowerCase().includes('demo')){
+            if(customer.login.toLowerCase().includes('.demo')){
+                return;
+            }
+            if(customer.login.toLowerCase().includes('demo.')){
                 return;
             }
             if(customer.login.toLowerCase().includes('test')){
@@ -92,8 +95,11 @@ const validation = (data) => {
             }            
             if(customer.login.toLowerCase().includes('youcast')){
                 return;
-            }            
-            if(customer.login.toLowerCase().includes('yc')){
+            }
+            if(customer.login.toLowerCase().includes('yc.')){
+                return;
+            }
+            if(customer.login.toLowerCase().includes('.yc')){
                 return;
             }
             if(customer.login.toLowerCase().includes('trial')){
