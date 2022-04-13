@@ -18,13 +18,13 @@ const validateYplayProduct = (validator) => {
         pacoteYplay = COMPACT;
         pacoteYplayStatus = SUCCESS;
     }
-    else if((validator.full+validator.completo+validator.nacionais+validator.kids+validator.tvod)===5 && 
-    (validator.basic+validator.compact+validator.premium+validator.light+validator.studios)===0)
+    else if((validator.full+validator.completo+validator.nacionais+validator.kids+validator.tvod+validator.studios)===6 && 
+    (validator.basic+validator.compact+validator.premium+validator.light)===0)
     {
         pacoteYplay = FULL;
         pacoteYplayStatus = SUCCESS;
     }
-    else if((validator.premium+validator.completo+validator.nacionais+validator.kids+validator.tvod+validator.studios)===6 && 
+    else if((validator.premium+validator.completo+validator.nacionais+validator.kids+validator.tvod)===5 && 
     (validator.full+validator.compact+validator.basic+validator.light)===0)
     {
         pacoteYplay = PREMIUM;

@@ -362,7 +362,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             if(countCustomers){
                 dealers.forEach((dealer)=>{
                     if(value.customers[0].products[0].dealerid === dealer.id){
-                        worksheetProviders.cell((rowCounter+2),1).string(dealer.nomefantasia).style({...dataStyle, alignment:{horizontal:['left']}});
+                        worksheetProviders.cell((rowCounter+2),1).string(dealer.nomefantasia === '' ? dealer.name : dealer.nomefantasia).style({...dataStyle, alignment:{horizontal:['left']}});
                         worksheetProviders.cell((rowCounter+2),2).string(dealer.razaosocial).style({...dataStyle, alignment:{horizontal:['left']}});
                         worksheetProviders.cell((rowCounter+2),3).string(dealer.cnpj).style({...dataStyle, alignment:{horizontal:['center']}});
                         worksheetProviders.cell((rowCounter+2),4).string(dealer.cidade).style({...dataStyle, alignment:{horizontal:['left']}});
