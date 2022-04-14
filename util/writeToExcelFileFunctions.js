@@ -1,5 +1,7 @@
 const excel = require('excel4node');
 const { BASIC, COMPACT, FULL, PREMIUM, URBANTV } = require('./constants');
+const { getCurrentMonth, getCurrentYear } = require('./dateManipulation');
+const writePdfFile = require('./writePdfFile');
 
 const headerStyle = {
     alignment: {
@@ -258,7 +260,7 @@ const writeBrandReport = (data) => {
         });        
     });
 
-    workbook.write('RelatorioBrands.xlsx');
+    workbook.write(`Relatório de Licenças Ativas - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
 }
 
 const writeProgramadorasReportSimba = (data, dealers) => {
@@ -377,7 +379,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
 
     //============================================================================
 
-    workbook.write('RelatorioProgramadoraSIMBA.xlsx'); 
+    workbook.write(`RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`); 
 }
 
 const writeProgramadorasReportGeneric = (data) => {
@@ -437,22 +439,23 @@ const writeProgramadorasReportGeneric = (data) => {
         }        
     })
     //console.table(dealers);
-    workbook.write('RelatorioProgramadoraCNN.xlsx');    
-    workbook.write('RelatorioProgramadoraFISH.xlsx');
+    workbook.write(`RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);    
+    workbook.write(`RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
 }
 
 const getDate = ()=>{
     const date = new Date();
-    const nowDate = date.toLocaleDateString();
+    const currentDate = date.toLocaleDateString();
     const lastMonth = date.setDate(date.getDate() - 30);
     const lastMonthDate = new Date(lastMonth).toLocaleDateString();     
-    return lastMonthDate +' até '+ nowDate;
+    return lastMonthDate +' até '+ currentDate;
 }
 
 const writeFile = (data, dealers) => {
     writeBrandReport(data);
     writeProgramadorasReportGeneric(data);
     writeProgramadorasReportSimba(data, dealers);
+    writePdfFile(data);
 }
 
 module.exports = {
