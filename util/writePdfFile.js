@@ -20,7 +20,9 @@ const getBodyData = (data) => {
             element.dealer !== 'Youcast CSMS' && 
             element.dealer !== 'YPLAY' && 
             element.dealer !== 'Z-Não-usar' && 
-            element.dealer !== 'softxx')
+            element.dealer !== 'softxx' &&
+			element.dealer !== 'LBR' && 
+			element.dealer !== 'net-angra')
         {
             amount += element.fullCount + element.premiumCount;
         }

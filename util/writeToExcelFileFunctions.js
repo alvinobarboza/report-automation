@@ -190,7 +190,9 @@ const writeBrandReport = (data) => {
             value.dealer !== 'Youcast CSMS' && 
             value.dealer !== 'YPLAY' && 
             value.dealer !== 'Z-Não-usar' && 
-            value.dealer !== 'softxx')
+            value.dealer !== 'softxx' &&
+			element.dealer !== 'LBR' && 
+			element.dealer !== 'net-angra')
         {
             const columns = Object.keys(value);
             let columnCount = 0;
@@ -273,7 +275,9 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             element.dealer !== 'Youcast CSMS' && 
             element.dealer !== 'YPLAY' && 
             element.dealer !== 'Z-Não-usar' && 
-            element.dealer !== 'softxx')
+            element.dealer !== 'softxx' &&
+			element.dealer !== 'LBR' && 
+			element.dealer !== 'net-angra')
         {
             amount += element.fullCount + element.premiumCount;
         }
@@ -357,7 +361,9 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             value.dealer !== 'Youcast CSMS' && 
             value.dealer !== 'YPLAY' && 
             value.dealer !== 'Z-Não-usar' && 
-            value.dealer !== 'softxx')
+            value.dealer !== 'softxx' &&
+			element.dealer !== 'LBR' && 
+			element.dealer !== 'net-angra')
         {            
             let countCustomers = 0;
             countCustomers += value.fullCount + value.premiumCount;
@@ -392,7 +398,9 @@ const writeProgramadorasReportGeneric = (data) => {
             element.dealer !== 'Youcast CSMS' && 
             element.dealer !== 'YPLAY' && 
             element.dealer !== 'Z-Não-usar' && 
-            element.dealer !== 'softxx')
+            element.dealer !== 'softxx' &&
+			element.dealer !== 'LBR' && 
+			element.dealer !== 'net-angra')
         {
             amount += element.fullCount + element.premiumCount;
         }
