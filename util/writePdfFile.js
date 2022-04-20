@@ -68,7 +68,7 @@ const getBodyData = (data) => {
 				table: {
 					widths: [200, '*'],
 					body: [
-						[{text:'Responsável pelo report:', fillColor: '#bfbfbf'}, {text:'Carlos Eduardo Salce', }],
+						[{text:'Responsável pelo report:', fillColor: '#bfbfbf'}, {text:'Carlos Eduardo Salce/Alvino N. C. Barboza', }],
 					]
 				}
 			},
