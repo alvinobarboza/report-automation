@@ -445,9 +445,9 @@ const writeProgramadorasReportGeneric = (data) => {
 
 const getDate = ()=>{
     const date = new Date();
-    const currentDate = date.toLocaleDateString();
+    const currentDate = date.toLocaleDateString('pt-br');
     const lastMonth = date.setDate(date.getDate() - 30);
-    const lastMonthDate = new Date(lastMonth).toLocaleDateString();     
+    const lastMonthDate = new Date(lastMonth).toLocaleDateString('pt-br');     
     return lastMonthDate +' até '+ currentDate;
 }
 

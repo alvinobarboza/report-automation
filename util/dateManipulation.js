@@ -1,5 +1,5 @@
 const getDate = ()=>{    
-    return (new Date()).toLocaleDateString();
+    return (new Date()).toLocaleDateString('pt-br');
 }
 
 const getCurrentMonth = () => {
