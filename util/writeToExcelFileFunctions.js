@@ -191,8 +191,8 @@ const writeBrandReport = (data) => {
             value.dealer !== 'YPLAY' && 
             value.dealer !== 'Z-Não-usar' && 
             value.dealer !== 'softxx' &&
-			element.dealer !== 'LBR' && 
-			element.dealer !== 'net-angra')
+			value.dealer !== 'LBR' && 
+			value.dealer !== 'net-angra')
         {
             const columns = Object.keys(value);
             let columnCount = 0;
@@ -362,8 +362,8 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             value.dealer !== 'YPLAY' && 
             value.dealer !== 'Z-Não-usar' && 
             value.dealer !== 'softxx' &&
-			element.dealer !== 'LBR' && 
-			element.dealer !== 'net-angra')
+			value.dealer !== 'LBR' && 
+			value.dealer !== 'net-angra')
         {            
             let countCustomers = 0;
             countCustomers += value.fullCount + value.premiumCount;
