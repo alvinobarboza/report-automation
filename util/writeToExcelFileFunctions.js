@@ -227,7 +227,7 @@ const writeBrandReport = (data) => {
                 }
                 if(columnCount === 6){
                     worksheetResult.cell((rowCounter+3), 8)
-                        .formula(`=SUM(C${rowCounter+3}:G${rowCounter+3})`).style(dataStyle);
+                        .formula(`=SUM(C${rowCounter+3}:F${rowCounter+3})`).style(dataStyle);
                 }
             });
             //Validation sheet
