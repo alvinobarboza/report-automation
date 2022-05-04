@@ -1,5 +1,7 @@
 
 util/AstartesData.json
+*.xlsx
+*.pdf
 # Logs
 logs
 *.log
