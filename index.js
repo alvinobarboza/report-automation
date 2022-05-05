@@ -3,7 +3,7 @@ const { writeFile } = require("./util/writeToExcelFileFunctions");
 const { getReport, getToken } = require("./util/moTVCalls");
 require('dotenv').config();
 const { smsBody, smsHeader, REPORT, SMSURL, } = require("./util/constants");
-const validation = require("./util/packageValidationFunctions");
+const {validation} = require("./util/packageValidationFunctions");
 
 const LOGINSMS = process.env.loginSMS
 const SECRETSMS = process.env.secretSMS
