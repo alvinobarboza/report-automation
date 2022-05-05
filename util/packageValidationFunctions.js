@@ -1,4 +1,5 @@
 const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR } = require("./constants");
+const { groupByGeneric } = require("./groupByFunctions");
 
 //Helper function to give final answer on what Yplay product it has - Check combination
 const validateYplayProduct = (validator) => {    
@@ -135,4 +136,51 @@ const validation = (data) => {
     });
 }
 
-module.exports = validation;
+const validateYplayExceptions = (data) => {
+    const productCounterCustomers = [];
+    data.forEach(e=>{
+        switch (e.dealer) {
+            case 'softxx':
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
+            case 'net-angra':                
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
+            case 'nbs':                
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
+            default:
+                break;
+        }
+    });
+    return productCounterCustomers;
+}
+
+const addToProductCounterCustomers = (array, productGrouped) => {
+    const tempTest = [];
+    let customerCounter = 0;
+    array.customers.forEach(d=>{
+        if(            
+            !(
+                d.login.toLowerCase().includes('.demo') ||
+                d.login.toLowerCase().includes('demo.') ||
+                d.login.toLowerCase().includes('test') ||
+                d.login.toLowerCase().includes('youcast') ||
+                d.login.toLowerCase().includes('.yc') ||
+                d.login.toLowerCase().includes('yc.') ||
+                d.login.toLowerCase().includes('trial') ||
+                d.login.toLowerCase().includes('yplay')
+            )
+        ){
+            d.products.forEach(p=> tempTest.push(p));
+            customerCounter++;
+        }
+    });
+    const groupedData = groupByGeneric(tempTest, 'product','customers');
+    productGrouped.push({dealer: array.dealer, products: groupedData, customersCount: customerCounter});
+}
+
+module.exports = {
+    validation,
+    validateYplayExceptions
+};
