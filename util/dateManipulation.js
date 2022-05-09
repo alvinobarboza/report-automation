@@ -2,6 +2,13 @@ const getDate = ()=>{
     return (new Date()).toLocaleDateString('pt-br');
 }
 
+const getDateRange = ()=>{
+    const date = new Date();
+    const firstDay = new Date(date.getFullYear(), date.getMonth(), 1).toLocaleDateString('pt-br');
+	const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).toLocaleDateString('pt-br');
+    return firstDay +' até '+ lastDay;
+}
+
 const getCurrentMonthYearNumeric = () => {
     const tempDate = new Date();
     return (new Date(tempDate.getFullYear(), tempDate.getMonth()))
@@ -40,10 +47,11 @@ const convertTimestampToMonthAndYear = (timestamp) => {
 }
 
 module.exports = {
+    getDate,
+    getDateRange,
     getCurrentMonth,
 	getCurrentMonthYearNumeric,
     getCurrentYear,
-    getDate,
     getLastMonthTimestamp,
 	getCurrentMonthYearShort,
     convertTimestampToMonthAndYear

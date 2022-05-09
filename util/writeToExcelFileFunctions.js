@@ -1,6 +1,6 @@
 const excel = require('excel4node');
 const { BASIC, COMPACT, FULL, PREMIUM, URBANTV } = require('./constants');
-const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort } = require('./dateManipulation');
+const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange } = require('./dateManipulation');
 const { groupByGeneric } = require('./groupByFunctions');
 const { validateYplayExceptions } = require('./packageValidationFunctions');
 const {
@@ -166,7 +166,7 @@ const writeBrandReport = (data) => {
 
 const writeProgramadorasReportSimba = (data, dealers) => {
     try {        
-        const stringDate = getDate();
+        const stringDate = getDateRange();
         let amount = 0;
         data.forEach(element => {
             if(element.dealer !== 'ADMIN-YOUCAST' && 
@@ -295,7 +295,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
 
 const writeProgramadorasReportGeneric = (data) => {
     try {        
-        const stringDate = getDate();
+        const stringDate = getDateRange();
         let amount = 0;
         data.forEach(element => {
             if(element.dealer !== 'ADMIN-YOUCAST' && 
@@ -359,14 +359,6 @@ const writeProgramadorasReportGeneric = (data) => {
     } catch (error) {
         console.log(error);
     }
-}
-
-const getDate = ()=>{
-    const date = new Date();
-    const currentDate = date.toLocaleDateString('pt-br');
-    const lastMonth = date.setDate(date.getDate() - 30);
-    const lastMonthDate = new Date(lastMonth).toLocaleDateString('pt-br');     
-    return lastMonthDate +' até '+ currentDate;
 }
 
 const writeToExeptionReport = (data) => {
