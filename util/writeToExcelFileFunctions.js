@@ -17,7 +17,7 @@ const writePdfFile = require('./writePdfFile');
 
 const writeBrandReport = (data) => {
     try {        
-        const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, URBANTV, 'Total'];
+        const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, URBANTV, 'Total Clientes ativos'];
         const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação', ];    
         const headerSheetAllcustomersValidation = ['Dealer', 'Customer', 'Pacote', 'Status', ];    
     
@@ -39,7 +39,8 @@ const writeBrandReport = (data) => {
         worksheetResult.column(4).setWidth(20);
         worksheetResult.column(5).setWidth(20);
         worksheetResult.column(6).setWidth(20);
-        worksheetResult.column(7).setWidth(20);
+        worksheetResult.column(7).setWidth(20);        
+        worksheetResult.column(8).setWidth(27);
         worksheetResult.row(2).filter();
     
         const worksheetAllCustomers = workbook.addWorksheet('TodosClientes',{

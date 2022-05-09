@@ -2,7 +2,6 @@
 const headerStyle = {
     alignment: {
         horizontal: ['center'],
-        shrinkToFit: true,
         vertical: ['center']
     },
     font: {
