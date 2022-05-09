@@ -1,7 +1,7 @@
 const fs = require('fs');
 const Pdfmake = require('pdfmake');
 const AstartesData = require('./AstartesData.json');
-const { getDate, getCurrentMonth, getCurrentYear, convertTimestampToMonthAndYear, getLastMonthTimestamp } = require('./dateManipulation');
+const { getDateAstertes, getCurrentMonth, getCurrentYear, convertTimestampToMonthAndYear, getLastMonthTimestamp } = require('./dateManipulation');
 
 const fonts = {
 	Roboto: {
@@ -46,7 +46,7 @@ const getBodyData = (data) => {
 				table: {
 					widths: [200, '*'],
 					body: [
-						[{text:'Data', fillColor: '#bfbfbf'}, getDate()],
+						[{text:'Data', fillColor: '#bfbfbf'}, getDateAstertes()],
 						[{text:'Licenciado', fillColor: '#bfbfbf'}, {text: 'YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA', }],
 						[{text:'Mês de referência ', fillColor: '#bfbfbf'}, {text: `${getCurrentMonth()}_${getCurrentYear()}`,}],
 						[{text:'Número total de assinantes no início do mês', fillColor: '#bfbfbf'}, {text: lastMonthAmount,}],

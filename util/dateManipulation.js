@@ -1,5 +1,6 @@
-const getDate = ()=>{    
-    return (new Date()).toLocaleDateString('pt-br');
+const getDateAstertes = ()=>{
+    const date = new Date();
+    return (new Date(date.getFullYear(), date.getMonth()+1, 1)).toLocaleDateString('pt-br');
 }
 
 const getDateRange = ()=>{
@@ -47,7 +48,7 @@ const convertTimestampToMonthAndYear = (timestamp) => {
 }
 
 module.exports = {
-    getDate,
+    getDateAstertes,
     getDateRange,
     getCurrentMonth,
 	getCurrentMonthYearNumeric,
