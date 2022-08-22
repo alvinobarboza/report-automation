@@ -11,7 +11,10 @@ const {
     headerStyleException,
     dataStyleException1,
     dataStyleException2,
-    dataStyleException3
+    dataStyleException3,
+    dataStyleSimba,
+    headerStyleSimba,
+    dataStyleSimbaProviders
 } = require('./stylesExcelFile');
 const writePdfFile = require('./writePdfFile');
 
@@ -197,17 +200,16 @@ const writeProgramadorasReportSimba = (data, dealers) => {
             'COMPÊTENCIA', 
             'NUMERO DE ASSINANTES', 
             'VALOR UNITARIO POR ASSINANTES', 
+            'MÍNIMO GARANTIDO',
             'VALOR EM REAIS TOTAL A SER FATURADO (MG)'
         ];
         const constantValuesProvidersSheetHeader = [
             'Provedor (nome fantasia)', 
             'Razão social', 
             'CNPJ', 
-            'Cidade',
-            'Estado',
+            'Cidade/Estado',
             'Número de assinantes'
         ];
-        const tableData = [stringDate, amount, 'R$', 'R$'];
         const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
     
         const workbook = new excel.Workbook({
@@ -234,34 +236,113 @@ const writeProgramadorasReportSimba = (data, dealers) => {
         worksheetProviders.row(1).setHeight(25);    
         worksheetProviders.row(1).filter();
         worksheetProviders.column(1).setWidth(30);    
-        worksheetProviders.column(2).setWidth(45);
+        worksheetProviders.column(2).setWidth(50);
         worksheetProviders.column(3).setWidth(25);
-        worksheetProviders.column(4).setWidth(25);
-        worksheetProviders.column(5).setWidth(10);
-        worksheetProviders.column(6).setWidth(30);
+        worksheetProviders.column(4).setWidth(30);
+        worksheetProviders.column(5).setWidth(30);
     
-        worksheetResult.cell(1,1,1,2,true).string(MAINHEADER).style(headerStyle);
+        worksheetResult.cell(1,1,1,2,true).string(MAINHEADER).style({...headerStyleSimba,
+            fill: {
+                type: 'pattern',
+                patternType: 'solid',
+                bgColor: '#ffff00',
+                fgColor: '#ffff00',
+            }
+        });
         constantValuesResultSheetHeader.forEach((value,index) => {
-            worksheetResult.cell((index+2),1).string(value).style(dataStyle);
+            switch (index) {
+                case 0:
+                    worksheetResult.cell((index+2),1).string(value).style({
+                        ...dataStyleSimba, 
+                        alignment: {
+                            horizontal: ['center'],
+                            vertical: ['center']
+                        },
+                        border: {
+                            ...dataStyleSimba.border, 
+                            top: {
+                                style: 'medium', 
+                                color: '#000000' 
+                            },}
+                    });
+                    break;
+                case constantValuesResultSheetHeader.length-1:
+                    worksheetResult.cell((index+2),1).string(value).style({
+                        ...dataStyleSimba, 
+                        alignment: {
+                            horizontal: ['center'],
+                            vertical: ['center']
+                        },
+                        border: {
+                            ...dataStyleSimba.border, 
+                            bottom: {
+                                style: 'medium', 
+                                color: '#000000' 
+                            },}
+                    });
+                    break;            
+                default:
+                    worksheetResult.cell((index+2),1).string(value).style({
+                        ...dataStyleSimba, 
+                        alignment: {
+                            horizontal: ['center'],
+                            vertical: ['center']
+                        },
+                    });
+                    break;
+            }
+            
         });
         constantValuesProvidersSheetHeader.forEach((value,index) => {
             worksheetProviders.cell(1,(index+1))
                 .string(value)
-                .style({...headerStyle, alignment:{horizontal:['center']}});
+                .style(headerStyleSimba);
         });
     
-        tableData.forEach((value, index)=>{
-            if(typeof value === 'number'){
-                worksheetResult.cell((index+2),2)
-                    .number(value)
-                    .style({...dataStyle, alignment:{horizontal:['right']}})
-            }else{
-                worksheetResult.cell((index+2),2)
-                    .string(value)
-                    .style({...dataStyle, alignment:{horizontal:['right']}})
-            }        
+        worksheetResult.cell(2,2).string(stringDate).style({
+            ...dataStyleSimba, 
+            alignment: {
+                horizontal: ['center'],
+                vertical: ['center']
+            },
+            border: {
+                ...dataStyleSimba.border, 
+                top: {
+                    style: 'medium', 
+                    color: '#000000' 
+                },}
         });
-    
+        worksheetResult.cell(3,2).number(amount).style({
+            ...dataStyleSimba, 
+            alignment: {
+                horizontal: ['center'],
+                vertical: ['center']
+            },
+        });
+        worksheetResult.cell(4,2).number(1.6).style({
+            ...dataStyleSimba,
+            alignment: {
+            horizontal: ['center'],
+            vertical: ['center']
+            }, 
+            numberFormat: "R$ #.##0"
+        });
+        worksheetResult.cell(5,2).string('').style(dataStyleSimba);
+        worksheetResult.cell(6,2).formula(`=SUM(B3*B4)`).style({
+            ...dataStyleSimba, 
+            alignment: {
+                horizontal: ['center'],
+                vertical: ['center']
+            },
+            border: {
+                ...dataStyleSimba.border, 
+                bottom: {
+                    style: 'medium', 
+                    color: '#000000' 
+                },}, 
+            numberFormat: "R$ #.##0"
+        });
+
         //============================================================================
         let rowCounter = 0;
         data.forEach((value) => {
@@ -285,12 +366,11 @@ const writeProgramadorasReportSimba = (data, dealers) => {
                 if(countCustomers){
                     dealers.forEach((dealer)=>{
                         if(value.customers[0].products[0].dealerid === dealer.id){
-                            worksheetProviders.cell((rowCounter+2),1).string(dealer.nomefantasia === '' ? dealer.name : dealer.nomefantasia).style({...dataStyle, alignment:{horizontal:['left']}});
-                            worksheetProviders.cell((rowCounter+2),2).string(dealer.razaosocial).style({...dataStyle, alignment:{horizontal:['left']}});
-                            worksheetProviders.cell((rowCounter+2),3).string(dealer.cnpj).style({...dataStyle, alignment:{horizontal:['center']}});
-                            worksheetProviders.cell((rowCounter+2),4).string(dealer.cidade).style({...dataStyle, alignment:{horizontal:['left']}});
-                            worksheetProviders.cell((rowCounter+2),5).string(dealer.uf).style({...dataStyle, alignment:{horizontal:['center']}});
-                            worksheetProviders.cell((rowCounter+2),6).number(countCustomers).style({...dataStyle, alignment:{horizontal:['center']}});
+                            worksheetProviders.cell((rowCounter+2),1).string(dealer.nomefantasia === '' ? dealer.name : dealer.nomefantasia).style({...dataStyleSimbaProviders, alignment:{horizontal:['left']}});
+                            worksheetProviders.cell((rowCounter+2),2).string(dealer.razaosocial).style({...dataStyleSimbaProviders, alignment:{horizontal:['left']}});
+                            worksheetProviders.cell((rowCounter+2),3).string(dealer.cnpj).style({...dataStyleSimbaProviders, alignment:{horizontal:['center']}});
+                            worksheetProviders.cell((rowCounter+2),4).string(`${dealer.cidade}/${dealer.uf}`).style({...dataStyleSimbaProviders, alignment:{horizontal:['left']}});
+                            worksheetProviders.cell((rowCounter+2),5).number(countCustomers).style({...dataStyleSimbaProviders, alignment:{horizontal:['center']}});
                         }
                     })
                     rowCounter++;

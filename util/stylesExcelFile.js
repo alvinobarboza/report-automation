@@ -35,12 +35,92 @@ const headerStyle = {
     }
 }
 
+const headerStyleSimba = {
+    alignment: {
+        horizontal: ['center'],
+        vertical: ['center']
+    },
+    font: {
+        color: '#000000',
+        bold: true,
+        name: 'Times New Roman',
+        underline: true,
+        size: 12
+    },
+    border: { 
+        left: {
+            style: 'medium', 
+            color: '#000000' 
+        },
+        right: {
+            style: 'medium', 
+            color: '#000000'
+        },
+        top: {
+            style: 'medium', 
+            color: '#000000'
+        },
+        bottom: {
+            style: 'medium', 
+            color: '#000000'
+        },
+    }
+}
+
 const dataStyle = {
     fill: {
         type: 'pattern',
         patternType: 'solid',
         bgColor: '#d9e1f2',
         fgColor: '#d9e1f2',
+    },
+    border: { 
+        left: {
+            style: 'thin', 
+            color: '#000000' 
+        },
+        right: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        top: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        bottom: {
+            style: 'thin', 
+            color: '#000000'
+        },
+    }
+}
+
+const dataStyleSimba = {
+    font: {
+        name: 'Times New Roman',
+    },
+    border: { 
+        left: {
+            style: 'medium', 
+            color: '#000000' 
+        },
+        right: {
+            style: 'medium', 
+            color: '#000000'
+        },
+        top: {
+            style: 'thin', 
+            color: '#000000'
+        },
+        bottom: {
+            style: 'thin', 
+            color: '#000000'
+        },
+    }
+}
+
+const dataStyleSimbaProviders = {
+    font: {
+        name: 'Times New Roman',
     },
     border: { 
         left: {
@@ -261,7 +341,10 @@ const dataStyleException3 = {
 
 module.exports = {
     headerStyle,
+    headerStyleSimba,
     dataStyle,
+    dataStyleSimba,
+    dataStyleSimbaProviders,
     dataStyleError,
     dataStyleOK,
     headerStyleException,
