@@ -89,6 +89,10 @@ const writeBrandReport = (data) => {
                 value.dealer !== 'softxx' &&
                 value.dealer !== 'LBR' && 
                 value.dealer !== 'net-angra'&& 
+                value.dealer !== 'Admin'&&
+                value.dealer !== 'ADYLNET'&&
+                value.dealer !== 'HSL'&&
+                value.dealer !== 'giganet-ro'&&
                 value.dealer !== 'nbs')
             {
                 const columns = Object.keys(value);
@@ -179,6 +183,10 @@ const writeProgramadorasReportSimba = (data, dealers) => {
                 element.dealer !== 'softxx' &&
                 element.dealer !== 'LBR' && 
                 element.dealer !== 'net-angra'&& 
+                element.dealer !== 'Admin'&&
+                element.dealer !== 'ADYLNET'&&
+                element.dealer !== 'HSL'&&
+                element.dealer !== 'giganet-ro'&& 
                 element.dealer !== 'nbs')
             {
                 amount += element.fullCount + element.premiumCount;
@@ -266,6 +274,10 @@ const writeProgramadorasReportSimba = (data, dealers) => {
                 value.dealer !== 'softxx' &&
                 value.dealer !== 'LBR' && 
                 value.dealer !== 'net-angra'&& 
+                value.dealer !== 'Admin'&&
+                value.dealer !== 'ADYLNET'&&
+                value.dealer !== 'HSL'&&
+                value.dealer !== 'giganet-ro'&& 
                 value.dealer !== 'nbs')
             {            
                 let countCustomers = 0;
@@ -308,6 +320,10 @@ const writeProgramadorasReportGeneric = (data) => {
                 element.dealer !== 'softxx' &&
                 element.dealer !== 'LBR' && 
                 element.dealer !== 'net-angra'&& 
+                element.dealer !== 'Admin'&&
+                element.dealer !== 'ADYLNET'&&
+                element.dealer !== 'HSL'&&
+                element.dealer !== 'giganet-ro'&& 
                 element.dealer !== 'nbs')
             {
                 amount += element.fullCount + element.premiumCount;

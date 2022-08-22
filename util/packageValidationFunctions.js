@@ -148,6 +148,12 @@ const validateYplayExceptions = (data) => {
                 break;
             case 'nbs':                
                 addToProductCounterCustomers(e, productCounterCustomers);
+                break;;
+            case 'NOVANET':                
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
+            case 'ADYLNET':                
+                addToProductCounterCustomers(e, productCounterCustomers);
                 break;
             default:
                 break;
