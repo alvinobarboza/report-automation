@@ -465,7 +465,7 @@ const writeToExeptionReport = (data) => {
 
 const writeToExeptionReportGeneric = (array) => {
     try {
-        console.log(array.dealer);
+        //console.log(array.dealer);
         const MAIN_HEADER = array.dealer.toUpperCase();
         const MAIN_HEADER_ROWS_COUNT = 6;
         const SECONDARY_HEADER = ['Pacote','QTD'];
