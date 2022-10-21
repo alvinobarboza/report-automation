@@ -139,6 +139,7 @@ const validation = (data) => {
 const validateYplayExceptions = (data) => {
     const productCounterCustomers = [];
     data.forEach(e=>{
+        //console.log(e.dealer);
         switch (e.dealer) {
             case 'softxx':
                 addToProductCounterCustomers(e, productCounterCustomers);
@@ -153,6 +154,9 @@ const validateYplayExceptions = (data) => {
                 addToProductCounterCustomers(e, productCounterCustomers);
                 break;
             case 'ADYLNET':                
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
+            case 'CCS':                
                 addToProductCounterCustomers(e, productCounterCustomers);
                 break;
             default:
