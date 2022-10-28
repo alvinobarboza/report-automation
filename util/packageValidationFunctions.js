@@ -161,6 +161,9 @@ const validateYplayExceptions = (data) => {
             case 'AGE TELECOM':                
                 addToProductCounterCustomers(e, productCounterCustomers);
                 break;
+            case 'COPREL':                
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
             default:
                 break;
         }
