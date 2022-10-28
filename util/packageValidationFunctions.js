@@ -7,25 +7,25 @@ const validateYplayProduct = (validator) => {
     let pacoteYplayStatus = '';
     let urban = validator.urban;
 
-    if((validator.basic+validator.light+validator.nacionais+validator.kids+validator.tvod)===5 && 
+    if((validator.basic+validator.light+validator.nacionais+validator.kids)===4 && 
     (validator.full+validator.compact+validator.premium+validator.studios+validator.completo)===0)
     {
         pacoteYplay = BASIC;
         pacoteYplayStatus = SUCCESS;
     }
-    else if((validator.compact+validator.light+validator.nacionais+validator.kids+validator.studios+validator.tvod)===6 && 
+    else if((validator.compact+validator.light+validator.nacionais+validator.kids+validator.studios)===5 && 
     (validator.full+validator.basic+validator.premium+validator.completo)===0)
     {
         pacoteYplay = COMPACT;
         pacoteYplayStatus = SUCCESS;
     }
-    else if((validator.full+validator.completo+validator.nacionais+validator.kids+validator.tvod+validator.studios)===6 && 
+    else if((validator.full+validator.completo+validator.nacionais+validator.kids+validator.studios)===5 && 
     (validator.basic+validator.compact+validator.premium+validator.light)===0)
     {
         pacoteYplay = FULL;
         pacoteYplayStatus = SUCCESS;
     }
-    else if((validator.premium+validator.completo+validator.nacionais+validator.kids+validator.tvod)===5 && 
+    else if((validator.premium+validator.completo+validator.nacionais+validator.kids)===4 && 
     (validator.full+validator.compact+validator.basic+validator.light)===0)
     {
         pacoteYplay = PREMIUM;
@@ -56,7 +56,6 @@ const validateProducts = (customer) => {
         kids: 0,
         nacionais: 0,
         studios: 0,
-        tvod: 0,
         urban: 0
     }
     customer.products.forEach(element => {
@@ -157,6 +156,9 @@ const validateYplayExceptions = (data) => {
                 addToProductCounterCustomers(e, productCounterCustomers);
                 break;
             case 'CCS':                
+                addToProductCounterCustomers(e, productCounterCustomers);
+                break;
+            case 'AGE TELECOM':                
                 addToProductCounterCustomers(e, productCounterCustomers);
                 break;
             default:

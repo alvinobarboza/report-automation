@@ -27,9 +27,6 @@ const switchCase = {
     'SVOD Studio': (t) => {
         t.studios = 1;
     },
-    'TVOD': (t) => {
-        t.tvod = 1;
-    },
     'Yplay UrbanTV': (t) => {
         t.urban = 1;
     },
