@@ -12,20 +12,23 @@ It preserves all information, since i'll may need them for more manipulation lat
 **Set used in a lazy way to have unique values, could be foreach check
 */
 const groupByGeneric = (ungrouped, delimiter, dataToGroup) => {
-    const group = new Set();
-    ungrouped.forEach(r => group.add(r[delimiter]));
+    const group = new Set();    
+    for (let i = 0; i < ungrouped.length; i++) {
+        group.add(ungrouped[i][delimiter]);        
+    }
+    const nonRepeated = Array.from(group);    
     const groupedValues = [];
-    group.forEach(d => {
+    for (let i = 0; i < nonRepeated.length; i++) {
         const value = {};
-        value[delimiter] = d;
+        value[delimiter] = nonRepeated[i];
         value[dataToGroup] = [];
-        ungrouped.forEach(e => {
-            if(e[delimiter] === d){
-                value[dataToGroup].push(e)
-            }
-        });
+        for (let y = 0; y < ungrouped.length; y++) {
+            if(ungrouped[y][delimiter] === nonRepeated[i]){
+                value[dataToGroup].push(ungrouped[y])
+            }            
+        }
         groupedValues.push(value);
-    });
+    }
     return groupedValues;
 }
 
@@ -36,11 +39,13 @@ const groupByDealerByCustomer = (ungroupedList) => {
     const groupedByDealer = groupByGeneric(ungroupedList, 'dealer', 'customers');
     //Group customers together, empty customers from main array and push the new one one-by-one, 
     //since if pushed customers group, it is already an array, it would be [[...,...]]
-    groupedByDealer.forEach((dealer, index) => {
-        const customers = groupByGeneric(dealer.customers, 'login', 'products');
-        groupedByDealer[index].customers.splice(0,groupedByDealer[index].customers.length);
-        customers.forEach(c => groupedByDealer[index].customers.push(c));
-    });
+    for (let i = 0; i < groupedByDealer.length; i++) {
+        const customers = groupByGeneric(groupedByDealer[i].customers, 'login', 'products');
+        groupedByDealer[i].customers.splice(0,groupedByDealer[i].customers.length);
+        for (let y = 0; y < customers.length; y++) {
+            groupedByDealer[i].customers.push(customers[y]);
+        }
+    }
     return groupedByDealer;
 }
 

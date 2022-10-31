@@ -2,6 +2,7 @@ const fs = require('fs');
 const Pdfmake = require('pdfmake');
 const AstartesData = require('./AstartesData.json');
 const { getDateAstertes, getCurrentMonth, getCurrentYear, convertTimestampToYearMonthDay, getLastMonthTimestamp } = require('./dateManipulation');
+const { dealerValidation } = require('./packageValidationFunctions');
 
 const fonts = {
 	Roboto: {
@@ -13,19 +14,11 @@ const fonts = {
 };
 const getBodyData = (data) => {
 	let amount = 0;
-	data.forEach(element => {
-		if (element.dealer !== 'ADMIN-YOUCAST' &&
-			element.dealer !== 'JACON dealer' &&
-			element.dealer !== 'TCM Telecom' &&
-			element.dealer !== 'Youcast CSMS' &&
-			element.dealer !== 'YPLAY' &&
-			element.dealer !== 'Z-Não-usar' &&
-			element.dealer !== 'softxx' &&
-			element.dealer !== 'LBR' &&
-			element.dealer !== 'net-angra') {
-			amount += element.fullCount + element.premiumCount;
+	for(let i = 0; i < data.length; i++) {
+		if (dealerValidation(data[i])) {
+			amount += data[i].fullCount + data[i].premiumCount;
 		}
-	});
+	}
 	const lastMonthAmount = getAstarteLastMonthCustomers();
 	saveAstartesCustomers(amount);
 	return {

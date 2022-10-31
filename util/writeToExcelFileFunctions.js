@@ -2,7 +2,7 @@ const excel = require('excel4node');
 const { BASIC, COMPACT, FULL, PREMIUM, URBANTV } = require('./constants');
 const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange } = require('./dateManipulation');
 const { groupByGeneric } = require('./groupByFunctions');
-const { validateYplayExceptions } = require('./packageValidationFunctions');
+const { validateYplayExceptions, dealerValidation } = require('./packageValidationFunctions');
 const {
     headerStyle,
     dataStyle,
@@ -474,29 +474,6 @@ const writeToExeptionReportGeneric = (array) => {
     } catch (error) {
         console.log(error);
     }
-}
-
-const dealerValidation = (customer) => {
-    return customer.customers[0].products[0].parentdealer !== 134 &&
-    customer.dealer !== 'ADMIN-YOUCAST' && 
-    customer.dealer !== 'JACON dealer' && 
-    customer.dealer !== 'TCM Telecom' &&
-    customer.dealer !== 'Youcast CSMS' && 
-    customer.dealer !== 'YPLAY' && 
-    customer.dealer !== 'Z-Não-usar' && 
-    customer.dealer !== 'softxx' &&
-    customer.dealer !== 'LBR' && 
-    customer.dealer !== 'net-angra'&& 
-    customer.dealer !== 'Admin'&&
-    customer.dealer !== 'ADYLNET'&&
-    customer.dealer !== 'HSL'&&
-    customer.dealer !== 'giganet-ro'&& 
-    customer.dealer !== 'OLLA TELECOM'&& 
-    customer.dealer !== 'nbs'&& 
-    customer.dealer !== 'COPREL'&& 
-    customer.dealer !== 'AGE TELECOM'&& 
-    customer.dealer !== 'CCS'&& 
-    customer.dealer !== 'NOVANET';
 }
 
 const writeFile = (data, dealers) => {

@@ -35,8 +35,8 @@ const getDealersData = () => getReport(
 Promise.all([getCustomersData(),getDealersData()]).then((result) => {
     const [customers,dealers] = result; 
     const groupedData = groupByDealerByCustomer(customers.response.rows);
-    validation(groupedData);
-    writeFile(groupedData, dealers.response.rows);
+    const validatedData = validation(groupedData);
+    writeFile(validatedData, dealers.response.rows);
 }).catch((err) => {
     console.table(err);
 });
