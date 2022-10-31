@@ -137,37 +137,48 @@ const validation = (data) => {
 
 const validateYplayExceptions = (data) => {
     const productCounterCustomers = [];
-    data.forEach(e=>{
+    const ollacustomers = {
+        dealer: 'OLLA TELECOM',
+        customers: [],
+    };
+    for (let index = 0; index < data.length; index++) {
         //console.log(e.dealer);
-        switch (e.dealer) {
+        switch (data[index].dealer) {
             case 'softxx':
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             case 'net-angra':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             case 'nbs':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;;
             case 'NOVANET':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             case 'ADYLNET':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             case 'CCS':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             case 'AGE TELECOM':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             case 'COPREL':                
-                addToProductCounterCustomers(e, productCounterCustomers);
+                addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             default:
                 break;
         }
-    });
+        if(data[index].customers[0].products[0].parentdealer === 134 || 
+            data[index].dealer === 'OLLA TELECOM' ){
+            for(let i = 0; i < data[index].customers.length; i++){
+                ollacustomers.customers.push(data[index].customers[i]);
+            }
+        }
+    }
+    addToProductCounterCustomers(ollacustomers, productCounterCustomers);
     return productCounterCustomers;
 }
 

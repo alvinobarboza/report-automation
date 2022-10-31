@@ -83,20 +83,7 @@ const writeBrandReport = (data) => {
         let rowCounter = 0;
         let rowCustomersCounter = 0;
         data.forEach((value) => {
-            if(value.dealer !== 'ADMIN-YOUCAST' && 
-                value.dealer !== 'JACON dealer' && 
-                value.dealer !== 'TCM Telecom' &&
-                value.dealer !== 'Youcast CSMS' && 
-                value.dealer !== 'YPLAY' && 
-                value.dealer !== 'Z-Não-usar' && 
-                value.dealer !== 'softxx' &&
-                value.dealer !== 'LBR' && 
-                value.dealer !== 'net-angra'&& 
-                value.dealer !== 'Admin'&&
-                value.dealer !== 'ADYLNET'&&
-                value.dealer !== 'HSL'&&
-                value.dealer !== 'giganet-ro'&&
-                value.dealer !== 'nbs')
+            if(dealerValidation(value))
             {
                 const columns = Object.keys(value);
                 let columnCount = 0;
@@ -177,20 +164,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
         const stringDate = getDateRange();
         let amount = 0;
         data.forEach(element => {
-            if(element.dealer !== 'ADMIN-YOUCAST' && 
-                element.dealer !== 'JACON dealer' && 
-                element.dealer !== 'TCM Telecom' &&
-                element.dealer !== 'Youcast CSMS' && 
-                element.dealer !== 'YPLAY' && 
-                element.dealer !== 'Z-Não-usar' && 
-                element.dealer !== 'softxx' &&
-                element.dealer !== 'LBR' && 
-                element.dealer !== 'net-angra'&& 
-                element.dealer !== 'Admin'&&
-                element.dealer !== 'ADYLNET'&&
-                element.dealer !== 'HSL'&&
-                element.dealer !== 'giganet-ro'&& 
-                element.dealer !== 'nbs')
+            if(dealerValidation(element))
             {
                 amount += element.fullCount + element.premiumCount;
             }
@@ -346,20 +320,7 @@ const writeProgramadorasReportSimba = (data, dealers) => {
         //============================================================================
         let rowCounter = 0;
         data.forEach((value) => {
-            if(value.dealer !== 'ADMIN-YOUCAST' && 
-                value.dealer !== 'JACON dealer' && 
-                value.dealer !== 'TCM Telecom' &&
-                value.dealer !== 'Youcast CSMS' && 
-                value.dealer !== 'YPLAY' && 
-                value.dealer !== 'Z-Não-usar' && 
-                value.dealer !== 'softxx' &&
-                value.dealer !== 'LBR' && 
-                value.dealer !== 'net-angra'&& 
-                value.dealer !== 'Admin'&&
-                value.dealer !== 'ADYLNET'&&
-                value.dealer !== 'HSL'&&
-                value.dealer !== 'giganet-ro'&& 
-                value.dealer !== 'nbs')
+            if(dealerValidation(value))
             {            
                 let countCustomers = 0;
                 countCustomers += value.fullCount + value.premiumCount;
@@ -391,20 +352,7 @@ const writeProgramadorasReportGeneric = (data) => {
         const stringDate = getDateRange();
         let amount = 0;
         data.forEach(element => {
-            if(element.dealer !== 'ADMIN-YOUCAST' && 
-                element.dealer !== 'JACON dealer' && 
-                element.dealer !== 'TCM Telecom' &&
-                element.dealer !== 'Youcast CSMS' && 
-                element.dealer !== 'YPLAY' && 
-                element.dealer !== 'Z-Não-usar' && 
-                element.dealer !== 'softxx' &&
-                element.dealer !== 'LBR' && 
-                element.dealer !== 'net-angra'&& 
-                element.dealer !== 'Admin'&&
-                element.dealer !== 'ADYLNET'&&
-                element.dealer !== 'HSL'&&
-                element.dealer !== 'giganet-ro'&& 
-                element.dealer !== 'nbs')
+            if(dealerValidation(element))
             {
                 amount += element.fullCount + element.premiumCount;
             }
@@ -460,6 +408,7 @@ const writeProgramadorasReportGeneric = (data) => {
 
 const writeToExeptionReport = (data) => {
     const validatedData = validateYplayExceptions(data);
+    //console.log(validatedData);
     validatedData.forEach(v => writeToExeptionReportGeneric(v));
 }
 
@@ -525,6 +474,29 @@ const writeToExeptionReportGeneric = (array) => {
     } catch (error) {
         console.log(error);
     }
+}
+
+const dealerValidation = (customer) => {
+    return customer.customers[0].products[0].parentdealer !== 134 &&
+    customer.dealer !== 'ADMIN-YOUCAST' && 
+    customer.dealer !== 'JACON dealer' && 
+    customer.dealer !== 'TCM Telecom' &&
+    customer.dealer !== 'Youcast CSMS' && 
+    customer.dealer !== 'YPLAY' && 
+    customer.dealer !== 'Z-Não-usar' && 
+    customer.dealer !== 'softxx' &&
+    customer.dealer !== 'LBR' && 
+    customer.dealer !== 'net-angra'&& 
+    customer.dealer !== 'Admin'&&
+    customer.dealer !== 'ADYLNET'&&
+    customer.dealer !== 'HSL'&&
+    customer.dealer !== 'giganet-ro'&& 
+    customer.dealer !== 'OLLA TELECOM'&& 
+    customer.dealer !== 'nbs'&& 
+    customer.dealer !== 'COPREL'&& 
+    customer.dealer !== 'AGE TELECOM'&& 
+    customer.dealer !== 'CCS'&& 
+    customer.dealer !== 'NOVANET';
 }
 
 const writeFile = (data, dealers) => {
