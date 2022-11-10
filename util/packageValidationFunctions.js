@@ -1,4 +1,4 @@
-const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR } = require("./constants");
+const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR, YPLAYPACOTEPREMIUM, YPLAYPACOTESTART, CANAISLOCAIS } = require("./constants");
 const { groupByGeneric } = require("./groupByFunctions");
 
 //Helper function to give final answer on what Yplay product it has - Check combination
@@ -45,7 +45,7 @@ const checkProduts = (caseTest, check) => {
 }
 
 //Main function to validate wich products customers has - *Needs to find a simpler way to do this
-const validateProducts = (customer) => {
+const validateProductsOld = (customer) => {
     const validator = {
         basic: 0,
         compact: 0,
@@ -76,35 +76,127 @@ const validateProducts = (customer) => {
     return validateYplayProduct(validator);
 }
 
-const validation = (raw) => {
-    const data = raw;
+const validateProductsNew = (customer) => {
+    let start = false;
+    let premium = false;
+    let locais = false;    
+
+    let pacoteYplay = '';
+    let pacoteYplayStatus = '';
+
+    for(let i = 0; i < customer.products.length; i++) {
+        if(customer.products[i].productid === YPLAYPACOTESTART){
+            validator.start = true;
+        }else if(customer.products[i].productid === YPLAYPACOTEPREMIUM){
+            validator.premium = true;
+        }else if(customer.products[i].product.includes(CANAISLOCAIS)){
+            validator.locais = true;
+        }
+    };
+
+    // if()
+
+    return { pacoteYplay, pacoteYplayStatus };
+}
+
+
+
+const validation = (data) => {
+    const oldPackage = [];
+    const newPackage = [];
+    for (let i = 0; i < data.length; i++) {
+        let test = false;
+        for (let y = 0; y < data[i].customers.length; y++) {
+            for (let x = 0; x < data[i].customers[y].products.length; x++) {
+                if(data[i].customers[y].products[x].productid === YPLAYPACOTEPREMIUM ||
+                    data[i].customers[y].products[x].productid === YPLAYPACOTESTART ||
+                    data[i].customers[y].products[x].product.includes(CANAISLOCAIS)){
+                    test = true;
+                }
+            }
+        }
+        if(test){
+            newPackage.push(data[i]);
+        }else{
+            oldPackage.push(data[i]);
+        }
+    }
+    return [ validationOldProducts(oldPackage), validationNewProducts(oldPackage)];
+}
+
+const validationNewProducts = (data) => {
+    for( let indexD = 0; indexD < data.length; indexD++) {
+        let startCount = 0;
+        let premiumCount = 0;
+        let test = 0;
+        if(dealerValidation(data[indexD])){
+            for( let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
+                if(validateLoginTest(data[indexD].customers[indexC])){
+                    test++;
+                    continue;
+                }
+                const { pacoteYplayStatus, pacoteYplay } = validateProductsNew(data[indexD].customers[indexC]); 
+                data[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
+                data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
+                switch (pacoteYplay) {
+                    case START:
+                        startCount++;
+                        break;
+                    case PREMIUM:
+                        premiumCount++;
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        data[indexD].startCount = startCount;
+        data[indexD].premiumCount = premiumCount;
+        data[indexD].test = test;
+    }
+    return data;
+}
+
+const validationOldProducts = (data) => {
     for( let indexD = 0; indexD < data.length; indexD++) {
         let basicCount = 0;
         let fullCount = 0;
         let compactCount = 0;
         let premiumCount = 0;
         let urbanTv = 0;
-        for( let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
-            if(validateLoginTest(data[indexD].customers[indexC])){
-                continue;
-            }
-            const { pacoteYplayStatus, pacoteYplay, urban } = validateProducts(data[indexD].customers[indexC]); 
-            data[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
-            data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
-            if(pacoteYplay === BASIC){
-                basicCount++;
-            }
-            if(pacoteYplay === COMPACT){
-                compactCount++;
-            }
-            if(pacoteYplay === FULL){
-                fullCount++;
-            }
-            if(pacoteYplay === PREMIUM){
-                premiumCount++;
-            }
-            if(urban === 1){
-                urbanTv++;
+        let error = 0;
+        let test = 0;
+        if(dealerValidation(data[indexD])){
+            for( let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
+                if(validateLoginTest(data[indexD].customers[indexC])){
+                    test++;
+                    continue;
+                }
+                const { pacoteYplayStatus, pacoteYplay, urban } = validateProductsOld(data[indexD].customers[indexC]); 
+                data[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
+                data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
+                switch (pacoteYplay) {
+                    case BASIC:
+                        basicCount++;
+                        break;
+                    case COMPACT:
+                        compactCount++;
+                        break;
+                    case FULL:
+                        fullCount++;
+                        break;
+                    case PREMIUM:
+                        premiumCount++;
+                        break;
+                    case ERROR:
+                        error++;
+                        break;            
+                    default:
+                        break;
+                }
+                if(urban === 1){
+                    urbanTv++;
+                }
             }
         }
         data[indexD].basicCount = basicCount;
@@ -112,6 +204,8 @@ const validation = (raw) => {
         data[indexD].compactCount = compactCount;
         data[indexD].premiumCount = premiumCount;
         data[indexD].urbanTv = urbanTv;
+        data[indexD].error = error;
+        data[indexD].test = test;
     }
     return data;
 }

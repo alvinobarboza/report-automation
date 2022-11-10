@@ -5,6 +5,11 @@ const REPORT = '/api/report/reportSelection';
 const SUCCESS = 'OK';
 const ERROR = 'ERRO';
 
+const YPLAYPACOTEPREMIUM = 688;
+const YPLAYPACOTESTART = 687;
+const CANAISLOCAIS = 'Canais Locais -';
+
+const START = 'Start';
 const BASIC = 'Basic';
 const COMPACT = 'Compact';
 const FULL = 'Full';
@@ -68,6 +73,10 @@ module.exports = {
     smsHeader,
     SUCCESS,
     ERROR,
+    YPLAYPACOTEPREMIUM,
+    YPLAYPACOTESTART,
+    CANAISLOCAIS,
+    START,
     BASIC,
     COMPACT,
     FULL,
