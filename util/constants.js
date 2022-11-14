@@ -19,24 +19,31 @@ const URBANTV = 'UrbanTV';
 const switchCase = {
     'Yplay Light': (t) => {
         t.light = 1;
+        return t;
     },
     'YPlay Completo': (t) => {
         t.completo = 1;
+        return t;
     },
     'SVOD Kids': (t) => {
         t.kids = 1;
+        return t;
     },
     'SVOD Nacional': (t) => {
         t.nacionais = 1;
+        return t;
     },
     'SVOD Studio': (t) => {
         t.studios = 1;
+        return t;
     },
     'Yplay UrbanTV': (t) => {
         t.urban = 1;
+        return t;
     },
     'default': (t) => {
         t.error = 0;
+        return t;
     }        
 }
 

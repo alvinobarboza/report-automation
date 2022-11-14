@@ -118,7 +118,7 @@ function validationNewProducts(data) {
 }
 
 function validateProductsOld(customer) {
-    const validator = {
+    let validator = {
         basic: 0,
         compact: 0,
         full: 0,
@@ -130,21 +130,25 @@ function validateProductsOld(customer) {
         studios: 0,
         urban: 0
     }
-    for (let i = 0; i < customer.products.length; i++) {
-        if (customer.products[i].product.includes(FULL)) {
-            validator.full = 1;
-        } else if (customer.products[i].product.includes(BASIC)) {
-            validator.basic = 1;
-        } else if (customer.products[i].product.includes(COMPACT)) {
-            validator.compact = 1;
-        } else if (customer.products[i].product.includes(PREMIUM)) {
-            validator.premium = 1;
-        } else if (customer.products[i].product.includes(URBANTV)) {
-            validator.urban = 1;
-        } else {
-            checkProduts(customer.products[i].product, validator)
-        }
-    };
+    try {
+        for (let i = 0; i < customer.products.length; i++) {
+            if (customer.products[i].product.includes(FULL)) {
+                validator.full = 1;
+            } else if (customer.products[i].product.includes(BASIC)) {
+                validator.basic = 1;
+            } else if (customer.products[i].product.includes(COMPACT)) {
+                validator.compact = 1;
+            } else if (customer.products[i].product.includes(PREMIUM)) {
+                validator.premium = 1;
+            } else if (customer.products[i].product.includes(URBANTV)) {
+                validator.urban = 1;
+            } else {
+                validator = checkProduts(customer.products[i].product, validator)
+            }
+        };        
+    } catch (error) {
+        console.log(error)
+    }
     return validateYplayProductOld(validator);
 }
 
@@ -236,7 +240,7 @@ function validateYplayProductNew(start, premium, locais) {
 }
 
 function checkProduts(caseTest, check) {
-    (switchCase[caseTest] || switchCase['default'])(check);
+    return (switchCase[caseTest] || switchCase['default'])(check);
 }
 
 function validateYplayExceptions(data) {
@@ -281,7 +285,9 @@ function validateYplayExceptions(data) {
             }
         }
     }
-    addToProductCounterCustomers(ollacustomers, productCounterCustomers);
+    if(ollacustomers.customers.length > 0){
+        addToProductCounterCustomers(ollacustomers, productCounterCustomers);
+    }
     return productCounterCustomers;
 }
 
