@@ -145,7 +145,7 @@ function validateProductsOld(customer) {
             } else {
                 validator = checkProduts(customer.products[i].product, validator)
             }
-        };        
+        };
     } catch (error) {
         console.log(error)
     }
@@ -259,7 +259,7 @@ function validateYplayExceptions(data) {
                 break;
             case 'nbs':
                 addToProductCounterCustomers(data[index], productCounterCustomers);
-                break;;
+                break;
             case 'NOVANET':
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
@@ -285,7 +285,7 @@ function validateYplayExceptions(data) {
             }
         }
     }
-    if(ollacustomers.customers.length > 0){
+    if (ollacustomers.customers.length > 0) {
         addToProductCounterCustomers(ollacustomers, productCounterCustomers);
     }
     return productCounterCustomers;

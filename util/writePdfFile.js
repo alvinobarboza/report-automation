@@ -12,11 +12,16 @@ const fonts = {
 		bolditalics: './fonts/roboto/Roboto-MediumItalic.ttf'
 	}
 };
-const getBodyData = (data) => {
+const getBodyData = (old, neW) => {
 	let amount = 0;
-	for(let i = 0; i < data.length; i++) {
-		if (dealerValidation(data[i])) {
-			amount += data[i].fullCount + data[i].premiumCount;
+	for (let i = 0; i < old.length; i++) {
+		if (dealerValidation(old[i])) {
+			amount += old[i].fullCount + old[i].premiumCount;
+		}
+	}
+	for (let i = 0; i < neW.length; i++) {
+		if (dealerValidation(neW[i])) {
+			amount += neW[i].startCount + neW[i].premiumCount;
 		}
 	}
 	const lastMonthAmount = getAstarteLastMonthCustomers();
@@ -128,11 +133,16 @@ const getAstarteLastMonthCustomers = () => {
 	return amount;
 }
 
-const writePdfFile = (data) => {
-	const pdfmake = new Pdfmake(fonts);
-	const body = getBodyData(data);
-	const pdfDoc = pdfmake.createPdfKitDocument(body, {});
-	pdfDoc.pipe(fs.createWriteStream(`Relatório Base de Assinantes - ${getCurrentMonth()}_${getCurrentYear()}.pdf`));
-	pdfDoc.end();
+// Report Astarte
+const writePdfFile = (old, neW) => {
+	try {
+		const pdfmake = new Pdfmake(fonts);
+		const body = getBodyData(old, neW);
+		const pdfDoc = pdfmake.createPdfKitDocument(body, {});
+		pdfDoc.pipe(fs.createWriteStream(`Relatório Base de Assinantes - ${getCurrentMonth()}_${getCurrentYear()}.pdf`));
+		pdfDoc.end();
+	} catch (error) {
+		console.log(error)
+	}
 }
 module.exports = writePdfFile;
