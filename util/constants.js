@@ -25,16 +25,16 @@ const switchCase = {
         t.completo = 1;
         return t;
     },
+    'YPlay Completo - GIGANET RO': (t) => {
+        t.completo = 1;
+        return t;
+    },
     'SVOD Kids': (t) => {
         t.kids = 1;
         return t;
     },
     'SVOD Nacional': (t) => {
         t.nacionais = 1;
-        return t;
-    },
-    'SVOD Studio': (t) => {
-        t.studios = 1;
         return t;
     },
     'Yplay UrbanTV': (t) => {
@@ -44,7 +44,7 @@ const switchCase = {
     'default': (t) => {
         t.error = 0;
         return t;
-    }        
+    }
 }
 
 const smsBody = (id) => `{
@@ -52,7 +52,7 @@ const smsBody = (id) => `{
         "reports_id": ${id}
     }
 }`
-const mwBody = (id,date) => `{
+const mwBody = (id, date) => `{
     "data":{
         "reportsId": ${id},
         "where": {
@@ -64,10 +64,10 @@ const mwBody = (id,date) => `{
     }
 }`
 const smsHeader = (token) => {
-    return {'Authorization' : token}
+    return { 'Authorization': token }
 }
 const mwHeader = (token) => {
-    return {'Authorization-user' : token}
+    return { 'Authorization-user': token }
 }
 
 module.exports = {
