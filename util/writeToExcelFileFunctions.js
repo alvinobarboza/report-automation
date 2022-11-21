@@ -17,6 +17,16 @@ const {
     dataStyleSimbaProviders
 } = require('./stylesExcelFile');
 const writePdfFile = require('./writePdfFile');
+const sendEmail = require('./email/mailSender');
+
+const FILENAMES = [];
+
+function insertFilenameToFilenames(filename) {
+    FILENAMES.push({
+        filename: filename,
+        path: `./${filename}`,
+    });
+}
 
 function writeFile(oldPackaging, newPackaging, dealers) {
     writeBrandReportOld(oldPackaging);
@@ -24,13 +34,16 @@ function writeFile(oldPackaging, newPackaging, dealers) {
     writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
     // Report Astarte
-    writePdfFile(oldPackaging, newPackaging);
+    writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
 
     // Report Simba
     writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
     // Report CNN / FISH
     writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+
+    // Send email
+    sendEmail(FILENAMES).catch(e => console.log(e));
 }
 
 const writeBrandReportOld = (data) => {
@@ -171,8 +184,9 @@ const writeBrandReportOld = (data) => {
                 }
             }
         }
-
-        workbook.write(`Relatório de Licenças Ativas (Antiga Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename = `Relatório de Licenças Ativas (Antiga Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        insertFilenameToFilenames(filename);
+        workbook.write(filename);
     } catch (error) {
         console.log(error);
     }
@@ -301,8 +315,9 @@ const writeBrandReportNew = (data) => {
                 }
             }
         }
-
-        workbook.write(`Relatório de Licenças Ativas (Nova Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename = `Relatório de Licenças Ativas (Nova Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        insertFilenameToFilenames(filename);
+        workbook.write(filename);
     } catch (error) {
         console.log(error);
     }
@@ -502,8 +517,9 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
         }
 
         //============================================================================
-
-        workbook.write(`RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename = `RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        insertFilenameToFilenames(filename);
+        workbook.write(filename);
     } catch (error) {
         console.log(error);
     }
@@ -565,8 +581,13 @@ const writeProgramadorasReportGeneric = (old, neW) => {
             }
         }
         //console.table(dealers);
-        workbook.write(`RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        workbook.write(`RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename1 = `RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename2 = `RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        insertFilenameToFilenames(filename1);
+        insertFilenameToFilenames(filename2)
+
+        workbook.write(filename1);
+        workbook.write(filename2);
     } catch (error) {
         console.log(error);
     }
@@ -636,7 +657,9 @@ const writeToExeptionReportGeneric = (array) => {
                 rowIndex++;
             }
         }
-        workBook.write(`RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename = `RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        insertFilenameToFilenames(filename)
+        workBook.write(filename);
 
     } catch (error) {
         console.log(error);

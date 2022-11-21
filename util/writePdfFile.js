@@ -134,12 +134,14 @@ const getAstarteLastMonthCustomers = () => {
 }
 
 // Report Astarte
-const writePdfFile = (old, neW) => {
+const writePdfFile = (old, neW, insertFilenameToFilenames) => {
 	try {
 		const pdfmake = new Pdfmake(fonts);
 		const body = getBodyData(old, neW);
 		const pdfDoc = pdfmake.createPdfKitDocument(body, {});
-		pdfDoc.pipe(fs.createWriteStream(`Relatório Base de Assinantes - ${getCurrentMonth()}_${getCurrentYear()}.pdf`));
+		const filename = `Relatório Base de Assinantes - ${getCurrentMonth()}_${getCurrentYear()}.pdf`;
+		insertFilenameToFilenames(filename);
+		pdfDoc.pipe(fs.createWriteStream(filename));
 		pdfDoc.end();
 	} catch (error) {
 		console.log(error)
