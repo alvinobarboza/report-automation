@@ -9,6 +9,7 @@ function validation(data) {
         let test = false;
         for (let y = 0; y < data[i].customers.length; y++) {
             for (let x = 0; x < data[i].customers[y].products.length; x++) {
+                data[i].dealerid = data[i].customers[y].products[x].dealerid;
                 if (data[i].customers[y].products[x].productid === YPLAYPACOTEPREMIUM ||
                     data[i].customers[y].products[x].productid === YPLAYPACOTESTART ||
                     data[i].customers[y].products[x].product.includes(CANAISLOCAIS)) {
@@ -233,7 +234,6 @@ function validateYplayProductNew(start, premium, locais) {
         // Nothing = start
         pacoteYplay = START;
         pacoteYplayStatus = ERROR;
-        console.log('Start *');
     }
     return { pacoteYplay, pacoteYplayStatus };
 }
@@ -249,29 +249,32 @@ function validateYplayExceptions(data) {
         customers: [],
     };
     for (let index = 0; index < data.length; index++) {
-        switch (data[index].dealer) {
-            case 'softxx':
+        switch (data[index].dealerid) {
+            case 37: //'softxx'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'net-angra':
+            case 55: // 'net-angra'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'nbs':
+            case 87: // 'nbs'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'NOVANET':
+            case 26: // 'NOVANET'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'ADYLNET':
+            case 19: // 'ADYLNET'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'CCS':
+            case 123: // 'CCS'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'AGE TELECOM':
+            case 124: // 'AGE TELECOM'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 'COPREL':
+            case 128: // 'COPREL'
+                addToProductCounterCustomers(data[index], productCounterCustomers);
+                break;
+            case 118: // 'WECLIX'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
             default:
@@ -318,25 +321,26 @@ function validateLoginTest(d) {
 
 function dealerValidation(customer) {
     return customer.customers[0].products[0].parentdealer !== 134 &&
-        customer.dealer !== 'ADMIN-YOUCAST' &&
-        customer.dealer !== 'JACON dealer' &&
-        customer.dealer !== 'TCM Telecom' &&
-        customer.dealer !== 'Youcast CSMS' &&
-        customer.dealer !== 'YPLAY' &&
-        customer.dealer !== 'Z-Não-usar' &&
-        customer.dealer !== 'softxx' &&
-        customer.dealer !== 'LBR' &&
-        customer.dealer !== 'net-angra' &&
-        customer.dealer !== 'Admin' &&
-        customer.dealer !== 'ADYLNET' &&
-        customer.dealer !== 'HSL' &&
-        customer.dealer !== 'giganet-ro' &&
-        customer.dealer !== 'OLLA TELECOM' &&
-        customer.dealer !== 'nbs' &&
-        customer.dealer !== 'COPREL' &&
-        customer.dealer !== 'AGE TELECOM' &&
-        customer.dealer !== 'CCS' &&
-        customer.dealer !== 'NOVANET';
+        customer.dealerid !== 1 && // 'JACON dealer'
+        customer.dealerid !== 3 && // 'Admin'
+        customer.dealerid !== 4 && // 'TCM Telecom'
+        customer.dealerid !== 5 && // 'Youcast CSMS'
+        customer.dealerid !== 13 && // 'Z-Não-usar'
+        customer.dealerid !== 15 && // 'YPLAY'
+        customer.dealerid !== 19 && // 'ADYLNET'
+        customer.dealerid !== 18 &&// 'HSL'
+        customer.dealerid !== 22 && // 'ADMIN-YOUCAST' 
+        customer.dealerid !== 21 && // 'LBR'
+        customer.dealerid !== 26 && // 'NOVANET'
+        customer.dealerid !== 37 && // 'softxx'
+        customer.dealerid !== 55 && // 'net-angra'
+        customer.dealerid !== 87 && // 'nbs'
+        customer.dealerid !== 113 && // 'giganet-ro'
+        customer.dealerid !== 118 && // 'WECLIX'
+        customer.dealerid !== 124 && // 'AGE TELECOM'
+        customer.dealerid !== 123 && // 'CCS'
+        customer.dealerid !== 128 && // 'COPREL'
+        customer.dealerid !== 134; // 'OLLA TELECOM'
 }
 
 module.exports = {
