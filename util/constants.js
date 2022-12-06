@@ -54,13 +54,7 @@ const smsBody = (id) => `{
 }`
 const mwBody = (id, date) => `{
     "data":{
-        "reportsId": ${id},
-        "where": {
-            "data": {
-                "type": "FilterText",
-                "value": "${date}"
-            }
-        }
+        "reportsId": ${id}
     }
 }`
 const smsHeader = (token) => {

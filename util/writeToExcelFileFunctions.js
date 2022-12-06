@@ -29,21 +29,24 @@ function insertFilenameToFilenames(filename) {
 }
 
 function writeFile(oldPackaging, newPackaging, dealers) {
-    writeBrandReportOld(oldPackaging);
-    writeBrandReportNew(newPackaging);
-    writeToExeptionReport([...newPackaging, ...oldPackaging]);
+    // writeBrandReportOld(oldPackaging);
+    // writeBrandReportNew(newPackaging);
+    // writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
+    // Olhar relatório Sumicity ativo bl
     // Report Astarte
     writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
 
+    // Olhar relatório Sumicity ativo bl
     // Report Simba
-    writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+    // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
+    // Olhar relatório Sumicity ativo bl
     // Report CNN / FISH
-    writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+    // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
     // Send email
-    sendEmail(FILENAMES).catch(e => console.log(e));
+    // sendEmail(FILENAMES).catch(e => console.log(e));
 }
 
 const writeBrandReportOld = (data) => {

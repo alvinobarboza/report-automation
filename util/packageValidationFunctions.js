@@ -2,9 +2,27 @@ const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR, YPLA
 const { groupByGeneric } = require("./groupByFunctions");
 
 // Main function
-function validation(data) {
+function validation(data, activeCustomers) {
     const oldPackage = [];
     const newPackage = [];
+
+    // =======Active/Inactive======
+
+    for (let i = 0; i < data.length; i++) {
+        for (let j = 0; j < data[i].customers.length; j++) {
+            data[i].customers[j].isactive = false;
+            for (let y = 0; y < activeCustomers.length; y++) {
+                if (activeCustomers[y].mwid === data[i].customers[j].products[0].idmw) {
+                    data[i].customers[j].isactive = true;
+                }
+            }
+        }
+    }
+
+
+    // ============================
+
+    // Seperation for new and old packaging 
     for (let i = 0; i < data.length; i++) {
         let test = false;
         for (let y = 0; y < data[i].customers.length; y++) {
@@ -325,6 +343,7 @@ function dealerValidation(customer) {
         customer.dealerid !== 3 && // 'Admin'
         customer.dealerid !== 4 && // 'TCM Telecom'
         customer.dealerid !== 5 && // 'Youcast CSMS'
+        customer.dealerid !== 7 && // 'Z-Não-usar'
         customer.dealerid !== 13 && // 'Z-Não-usar'
         customer.dealerid !== 15 && // 'YPLAY'
         customer.dealerid !== 19 && // 'ADYLNET'
