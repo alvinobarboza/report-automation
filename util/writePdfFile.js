@@ -16,12 +16,12 @@ const getBodyData = (old, neW) => {
 	let amount = 0;
 	for (let i = 0; i < old.length; i++) {
 		if (dealerValidation(old[i])) {
-			amount += old[i].fullCount + old[i].premiumCount;
+			amount += old[i].fullActiveCount + old[i].premiumActiveCount;
 		}
 	}
 	for (let i = 0; i < neW.length; i++) {
 		if (dealerValidation(neW[i])) {
-			amount += neW[i].startCount + neW[i].premiumCount;
+			amount += neW[i].startActiveCount + neW[i].premiumActiveCount;
 		}
 	}
 	const lastMonthAmount = getAstarteLastMonthCustomers();

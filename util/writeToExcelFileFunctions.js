@@ -29,24 +29,21 @@ function insertFilenameToFilenames(filename) {
 }
 
 function writeFile(oldPackaging, newPackaging, dealers) {
-    // writeBrandReportOld(oldPackaging);
-    // writeBrandReportNew(newPackaging);
-    // writeToExeptionReport([...newPackaging, ...oldPackaging]);
+    writeBrandReportOld(oldPackaging);
+    writeBrandReportNew(newPackaging);
+    writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
-    // Olhar relatório Sumicity ativo bl
     // Report Astarte
     writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
 
-    // Olhar relatório Sumicity ativo bl
     // Report Simba
-    // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+    writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
-    // Olhar relatório Sumicity ativo bl
     // Report CNN / FISH
-    // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+    writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
     // Send email
-    // sendEmail(FILENAMES).catch(e => console.log(e));
+    sendEmail(FILENAMES).catch(e => console.log(e));
 }
 
 const writeBrandReportOld = (data) => {
@@ -332,12 +329,12 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
         let amount = 0;
         for (let i = 0; i < old.length; i++) {
             if (dealerValidation(old[i])) {
-                amount += old[i].fullCount + old[i].premiumCount;
+                amount += old[i].fullActiveCount + old[i].premiumActiveCount;
             }
         }
         for (let i = 0; i < neW.length; i++) {
             if (dealerValidation(neW[i])) {
-                amount += neW[i].startCount + neW[i].premiumCount;
+                amount += neW[i].startActiveCount + neW[i].premiumActiveCount;
             }
         }
         const constantValuesResultSheetHeader = [
@@ -474,8 +471,14 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
             },
             numberFormat: "R$ #.#0"
         });
-        worksheetResult.cell(5, 2).string('').style(dataStyleSimba);
-        worksheetResult.cell(6, 2).formula(`=SUM(B3*B4)`).style({
+        worksheetResult.cell(5, 2).string('R$ 0,00').style({
+            ...dataStyleSimba,
+            alignment: {
+                horizontal: ['center'],
+                vertical: ['center']
+            },
+        });
+        worksheetResult.cell(6, 2).number(amount * 1.6).style({
             ...dataStyleSimba,
             alignment: {
                 horizontal: ['center'],
@@ -498,19 +501,18 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
             if (dealerValidation(oldPlusNew[i])) {
                 let countCustomers = 0;
                 // check difference between old and new packaging
-                if (oldPlusNew[i].fullCount) {
-                    countCustomers += oldPlusNew[i].fullCount + oldPlusNew[i].premiumCount;
-                } else if (oldPlusNew[i].startCount) {
-                    countCustomers += oldPlusNew[i].startCount + oldPlusNew[i].premiumCount;
+                if (typeof oldPlusNew[i].startCount !== 'undefined') {
+                    countCustomers += oldPlusNew[i].startActiveCount + oldPlusNew[i].premiumActiveCount;
+                } else {
+                    countCustomers += oldPlusNew[i].fullActiveCount + oldPlusNew[i].premiumActiveCount;
                 }
-
                 if (countCustomers) {
                     for (let y = 0; y < dealers.length; y++) {
                         if (oldPlusNew[i].customers[0].products[0].dealerid === dealers[y].id) {
-                            worksheetProviders.cell((rowCounter + 2), 1).string(dealers[y].nomefantasia === '' ? dealers[y].name : dealers[y].nomefantasia).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
-                            worksheetProviders.cell((rowCounter + 2), 2).string(dealers[y].razaosocial).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
-                            worksheetProviders.cell((rowCounter + 2), 3).string(dealers[y].cnpj).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['center'] } });
-                            worksheetProviders.cell((rowCounter + 2), 4).string(`${dealers[y].cidade}/${dealers[y].uf}`).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
+                            worksheetProviders.cell((rowCounter + 2), 1).string(dealers[y].nomefantasia === '' ? dealers[y].name.toUpperCase() : dealers[y].nomefantasia.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
+                            worksheetProviders.cell((rowCounter + 2), 2).string(dealers[y].razaosocial.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
+                            worksheetProviders.cell((rowCounter + 2), 3).string(dealers[y].cnpj.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['center'] } });
+                            worksheetProviders.cell((rowCounter + 2), 4).string(`${dealers[y].cidade}/${dealers[y].uf}`.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
                             worksheetProviders.cell((rowCounter + 2), 5).number(countCustomers).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['center'] } });
                         }
                     }
@@ -534,12 +536,12 @@ const writeProgramadorasReportGeneric = (old, neW) => {
         let amount = 0;
         for (let i = 0; i < old.length; i++) {
             if (dealerValidation(old[i])) {
-                amount += old[i].fullCount + old[i].premiumCount;
+                amount += old[i].fullActiveCount + old[i].premiumActiveCount;
             }
         }
         for (let i = 0; i < neW.length; i++) {
             if (dealerValidation(neW[i])) {
-                amount += neW[i].premiumCount;
+                amount += neW[i].premiumActiveCount;
             }
         }
 

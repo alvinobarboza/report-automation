@@ -9,16 +9,18 @@ function validation(data, activeCustomers) {
     // =======Active/Inactive======
 
     for (let i = 0; i < data.length; i++) {
+        let activeCount = 0;
         for (let j = 0; j < data[i].customers.length; j++) {
             data[i].customers[j].isactive = false;
             for (let y = 0; y < activeCustomers.length; y++) {
                 if (activeCustomers[y].mwid === data[i].customers[j].products[0].idmw) {
                     data[i].customers[j].isactive = true;
+                    activeCount++;
                 }
             }
         }
+        data[i].activeCount = activeCount;
     }
-
 
     // ============================
 
@@ -49,9 +51,13 @@ function validation(data, activeCustomers) {
 function validationOldProducts(data) {
     for (let indexD = 0; indexD < data.length; indexD++) {
         let basicCount = 0;
+        let basicActiveCount = 0;
         let fullCount = 0;
+        let fullActiveCount = 0;
         let compactCount = 0;
+        let compactActiveCount = 0;
         let premiumCount = 0;
+        let premiumActiveCount = 0;
         let urbanTv = 0;
         let error = 0;
         let test = 0;
@@ -66,15 +72,27 @@ function validationOldProducts(data) {
                 data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
                 switch (pacoteYplay) {
                     case BASIC:
+                        if (data[indexD].customers[indexC].isactive) {
+                            basicActiveCount++;
+                        }
                         basicCount++;
                         break;
                     case COMPACT:
+                        if (data[indexD].customers[indexC].isactive) {
+                            compactActiveCount++;
+                        }
                         compactCount++;
                         break;
                     case FULL:
+                        if (data[indexD].customers[indexC].isactive) {
+                            fullActiveCount++;
+                        }
                         fullCount++;
                         break;
                     case PREMIUM:
+                        if (data[indexD].customers[indexC].isactive) {
+                            premiumActiveCount++;
+                        }
                         premiumCount++;
                         break;
                     case ERROR:
@@ -89,9 +107,13 @@ function validationOldProducts(data) {
             }
         }
         data[indexD].basicCount = basicCount;
+        data[indexD].basicActiveCount = basicActiveCount;
         data[indexD].fullCount = fullCount;
+        data[indexD].fullActiveCount = fullActiveCount;
         data[indexD].compactCount = compactCount;
+        data[indexD].compactActiveCount = compactActiveCount;
         data[indexD].premiumCount = premiumCount;
+        data[indexD].premiumActiveCount = premiumActiveCount;
         data[indexD].urbanTv = urbanTv;
         data[indexD].error = error;
         data[indexD].test = test;
@@ -103,7 +125,9 @@ function validationNewProducts(data) {
     try {
         for (let indexD = 0; indexD < data.length; indexD++) {
             let startCount = 0;
+            let startActiveCount = 0;
             let premiumCount = 0;
+            let premiumActiveCount = 0;
             let test = 0;
             if (dealerValidation(data[indexD])) {
                 for (let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
@@ -116,9 +140,15 @@ function validationNewProducts(data) {
                     data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
                     switch (pacoteYplay) {
                         case START:
+                            if (data[indexD].customers[indexC].isactive) {
+                                startActiveCount++;
+                            }
                             startCount++;
                             break;
                         case PREMIUM:
+                            if (data[indexD].customers[indexC].isactive) {
+                                premiumActiveCount++;
+                            }
                             premiumCount++;
                             break;
                         default:
@@ -127,7 +157,9 @@ function validationNewProducts(data) {
                 }
             }
             data[indexD].startCount = startCount;
+            data[indexD].startActiveCount = startActiveCount;
             data[indexD].premiumCount = premiumCount;
+            data[indexD].premiumActiveCount = premiumActiveCount;
             data[indexD].test = test;
         }
     } catch (error) {

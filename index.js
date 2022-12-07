@@ -48,7 +48,6 @@ Promise.all([getCustomersData(), getDealersData(), getActiveCustomers()]).then((
     const [customers, dealers, activeCustomers] = result;
     const groupedData = groupByDealerByCustomer(customers.response.rows);
     const { newPackaging, oldPackaging } = validation(groupedData, activeCustomers.response.rows);
-    newPackaging.forEach(c => c.customers.forEach(d => console.log(d.login, d.isactive)));
     writeFile(oldPackaging, newPackaging, dealers.response.rows);
 }).catch((err) => {
     console.table(err);
