@@ -2,7 +2,7 @@ const excel = require('excel4node');
 const { BASIC, COMPACT, FULL, PREMIUM, URBANTV, ERROR, START } = require('./constants');
 const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange } = require('./dateManipulation');
 const { groupByGeneric } = require('./groupByFunctions');
-const { validateYplayExceptions, dealerValidation } = require('./packageValidationFunctions');
+const { validateYplayExceptions, dealerValidation, validateYplayComlombia } = require('./packageValidationFunctions');
 const {
     headerStyle,
     dataStyle,
@@ -29,21 +29,32 @@ function insertFilenameToFilenames(filename) {
 }
 
 function writeFile(oldPackaging, newPackaging, dealers) {
-    writeBrandReportOld(oldPackaging);
-    writeBrandReportNew(newPackaging);
-    writeToExeptionReport([...newPackaging, ...oldPackaging]);
+    // writeBrandReportOld(oldPackaging);
+    // writeBrandReportNew(newPackaging);
+    // writeToExeptionReport([...newPackaging, ...oldPackaging]);
+
+    // Report Yplay colombia
+    // writeToYplayColombia([...newPackaging, ...oldPackaging]);
+    writeToYplayColombiaReport();
 
     // Report Astarte
-    writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
+    // writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
 
     // Report Simba
-    writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+    // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
     // Report CNN / FISH
-    writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+    // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
     // Send email
-    sendEmail(FILENAMES).catch(e => console.log(e));
+    // sendEmail(FILENAMES).catch(e => console.log(e));
+}
+
+const writeToYplayColombia = (data) => {
+    const validatedData = validateYplayComlombia(data);
+    console.log(validatedData.packagesname);
+    writeToYplayColombiaReport(validatedData);
+    // validatedData.forEach(d => writeToExeptionReportGeneric(d));
 }
 
 const writeBrandReportOld = (data) => {
@@ -600,7 +611,7 @@ const writeProgramadorasReportGeneric = (old, neW) => {
 
 const writeToExeptionReport = (data) => {
     const validatedData = validateYplayExceptions(data);
-    // console.log(validatedData);
+    // validatedData.forEach(data => console.log(data));
     validatedData.forEach(v => writeToExeptionReportGeneric(v));
 }
 
@@ -623,6 +634,98 @@ const writeToExeptionReportGeneric = (array) => {
         workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
         workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
         workSheetResult.cell(5, 2).number(array.customersCount).style(dataStyleException2);
+
+        for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
+            if (i % 2 === 0) {
+                workSheetResult.row(i).setHeight(8);
+                continue;
+            }
+        }
+        workSheetResult.row(MAIN_HEADER_ROWS_COUNT + 1).filter();
+        for (let i = 0; i < SECONDARY_HEADER.length; i++) {
+            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT + 1, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException)
+        }
+        for (let i = 0; i < array.products.length; i++) {
+            workSheetResult.cell((i + MAIN_HEADER_ROWS_COUNT + 2), 1).string(array.products[i].product).style(dataStyleException3);
+            workSheetResult.cell((i + MAIN_HEADER_ROWS_COUNT + 2), 2).number(array.products[i].customers.length).style(dataStyleException2);
+        }
+
+        //------------------------ workSheet 2 ----------------------------
+        const worksheetAllCustomers = workBook.addWorksheet('TodosClientes');
+
+        worksheetAllCustomers.column(2).setWidth(20);
+        worksheetAllCustomers.column(3).setWidth(25);
+        worksheetAllCustomers.column(4).setWidth(25);
+        worksheetAllCustomers.column(5).setWidth(20);
+
+        worksheetAllCustomers.row(2).filter();
+        for (let i = 0; i < headerSheetAllcustomers.length; i++) {
+            worksheetAllCustomers.cell(2, (i + 2)).string(headerSheetAllcustomers[i]).style(headerStyle);
+        }
+
+        let rowIndex = 0;
+        for (let i = 0; i < array.products.length; i++) {
+            for (let y = 0; y < array.products[i].customers.length; y++) {
+                worksheetAllCustomers.cell((rowIndex + 3), 2).string(array.products[i].customers[y].dealer).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.products[i].customers[y].login).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex + 3), 4).string(array.products[i].customers[y].product).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex + 3), 5).date(array.products[i].customers[y].activation).style(dataStyle);
+                rowIndex++;
+            }
+        }
+        const filename = `RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        insertFilenameToFilenames(filename)
+        workBook.write(filename);
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const writeToYplayColombiaReport = (array) => {
+
+    try {
+        //console.log(array.dealer);
+        //--------------------test
+        const data = [
+            'CANALES ABIERTOS',
+            'SERVINET - Homepage',
+            'ADULTO',
+            'DESPORTES',
+            'INFANTIL',
+            'PELICULAS Y SERIES',
+            'VARIEDADES',
+            'STINGRAY CO.',
+            'YPLAY Colombia - Local'
+        ]
+        const brands = [
+            {
+                dealer: 'yplaco1',
+                total: 50
+            },
+            {
+                dealer: 'yplaco2',
+                total: 560
+            }
+        ]
+        //--------------------test
+        const MAIN_HEADER = 'YPLAY COLOMBIA';
+        const SECONDARY_HEADER = ['Empresa', 'Total'];
+        const TERTIARY_HEADER = ['Empresa', ...data];
+        const MAIN_HEADER_ROWS_COUNT = 6;
+        const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
+
+        const workBook = new excel.Workbook();
+
+        //------------------------ workSheet 1 ----------------------------
+        const workSheetResult = workBook.addWorksheet('Operadora');
+
+        workSheetResult.column(1).setWidth(50);
+        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
+        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
+        workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
+        workSheetResult.cell(5, 2).number(610).style(dataStyleException2);
 
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
             if (i % 2 === 0) {

@@ -327,6 +327,9 @@ function validateYplayExceptions(data) {
             case 118: // 'WECLIX'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
+            case 145: // 'giga-fibra-co'
+                addToProductCounterCustomers(data[index], productCounterCustomers);
+                break;
             default:
                 break;
         }
@@ -346,16 +349,68 @@ function validateYplayExceptions(data) {
 function addToProductCounterCustomers(array, productGrouped) {
     const tempTest = [];
     let customerCounter = 0;
-    for (let i = 0; i < array.customers.length; i++) {
-        if (!(validateLoginTest(array.customers[i]))) {
-            for (let y = 0; y < array.customers[i].products.length; y++) {
-                tempTest.push(array.customers[i].products[y])
+    try {
+        for (let i = 0; i < array.customers.length; i++) {
+            if (!(validateLoginTest(array.customers[i])) && array.dealerid !== 145) {
+                for (let y = 0; y < array.customers[i].products.length; y++) {
+                    tempTest.push(array.customers[i].products[y])
+                }
+                customerCounter++;
+            } else if (array.dealerid === 145) { // GIGA FIBRA must show all customers
+                for (let y = 0; y < array.customers[i].products.length; y++) {
+                    tempTest.push(array.customers[i].products[y])
+                }
+                customerCounter++;
             }
-            customerCounter++;
         }
+        const groupedData = groupByGeneric(tempTest, 'product', 'customers');
+        productGrouped.push({
+            dealerid: array.dealerid,
+            dealer: array.dealer,
+            products: groupedData,
+            customersCount: customerCounter
+        });
+    } catch (error) {
+        console.log(error);
     }
-    const groupedData = groupByGeneric(tempTest, 'product', 'customers');
-    productGrouped.push({ dealer: array.dealer, products: groupedData, customersCount: customerCounter });
+}
+
+function validateYplayComlombia(data) {
+    const productGrouped = {
+        packagesname: [],
+        groups: []
+    };
+    const packagesSet = new Set();
+    try {
+        for (let i = 0; i < data.length; i++) {
+            if (data[i].customers[0].products[0].vendorid === 34) {
+                const tempTest = [];
+                let customerCounter = 0;
+
+                for (let j = 0; j < data[i].customers.length; j++) {
+                    for (let y = 0; y < data[i].customers[j].products.length; y++) {
+                        tempTest.push(data[i].customers[j].products[y]);
+                        packagesSet.add(data[i].customers[j].products[y].product);
+                    }
+                    customerCounter++;
+                }
+
+                const groupedData = groupByGeneric(tempTest, 'product', 'customers');
+                productGrouped.groups.push({
+                    dealerid: data[i].dealerid,
+                    dealer: data[i].dealer,
+                    products: groupedData,
+                    customersCount: customerCounter
+                });
+            }
+        }
+        productGrouped.packagesname = Array.from(packagesSet);
+        return productGrouped;
+
+    } catch (error) {
+        console.log(error);
+        return [];
+    }
 }
 
 function validateLoginTest(d) {
@@ -391,11 +446,14 @@ function dealerValidation(customer) {
         customer.dealerid !== 124 && // 'AGE TELECOM'
         customer.dealerid !== 123 && // 'CCS'
         customer.dealerid !== 128 && // 'COPREL'
-        customer.dealerid !== 134; // 'OLLA TELECOM'
+        customer.dealerid !== 134 && // 'OLLA TELECOM'
+        customer.dealerid !== 145 && // giga-fibra-co
+        customer.customers[0].products[0].vendorid !== 34; // Yplay comlombia
 }
 
 module.exports = {
     validation,
     validateYplayExceptions,
     dealerValidation,
+    validateYplayComlombia
 };
