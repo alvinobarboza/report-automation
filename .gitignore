@@ -2,6 +2,7 @@
 util/AstartesData.json
 *.xlsx
 *.pdf
+test.js
 # Logs
 logs
 *.log

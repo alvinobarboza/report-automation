@@ -390,7 +390,8 @@ function validateYplayComlombia(data) {
                 for (let j = 0; j < data[i].customers.length; j++) {
                     for (let y = 0; y < data[i].customers[j].products.length; y++) {
                         tempTest.push(data[i].customers[j].products[y]);
-                        packagesSet.add(data[i].customers[j].products[y].product);
+                        const packageTmp = data[i].customers[j].products[y].product;
+                        packageTmp.toUpperCase().includes('HOMEPAGE') || data[i].dealerid === 153 ? '' : packagesSet.add(packageTmp);
                     }
                     customerCounter++;
                 }
@@ -400,7 +401,8 @@ function validateYplayComlombia(data) {
                     dealerid: data[i].dealerid,
                     dealer: data[i].dealer,
                     products: groupedData,
-                    customersCount: customerCounter
+                    customersCount: customerCounter,
+                    validDealer: !(data[i].dealerid === 153) // Discard Yplay colombia
                 });
             }
         }
@@ -455,5 +457,6 @@ module.exports = {
     validation,
     validateYplayExceptions,
     dealerValidation,
+    validateLoginTest,
     validateYplayComlombia
 };

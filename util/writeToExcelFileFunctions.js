@@ -2,7 +2,7 @@ const excel = require('excel4node');
 const { BASIC, COMPACT, FULL, PREMIUM, URBANTV, ERROR, START } = require('./constants');
 const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange } = require('./dateManipulation');
 const { groupByGeneric } = require('./groupByFunctions');
-const { validateYplayExceptions, dealerValidation, validateYplayComlombia } = require('./packageValidationFunctions');
+const { validateYplayExceptions, dealerValidation, validateYplayComlombia, validateLoginTest } = require('./packageValidationFunctions');
 const {
     headerStyle,
     dataStyle,
@@ -29,32 +29,30 @@ function insertFilenameToFilenames(filename) {
 }
 
 function writeFile(oldPackaging, newPackaging, dealers) {
-    // writeBrandReportOld(oldPackaging);
-    // writeBrandReportNew(newPackaging);
-    // writeToExeptionReport([...newPackaging, ...oldPackaging]);
+    writeBrandReportOld(oldPackaging);
+    writeBrandReportNew(newPackaging);
+    writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
     // Report Yplay colombia
-    // writeToYplayColombia([...newPackaging, ...oldPackaging]);
-    writeToYplayColombiaReport();
+    writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
     // Report Astarte
-    // writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
+    writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
 
     // Report Simba
-    // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+    writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
     // Report CNN / FISH
-    // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+    writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
     // Send email
-    // sendEmail(FILENAMES).catch(e => console.log(e));
+    sendEmail(FILENAMES).catch(e => console.log(e));
 }
 
 const writeToYplayColombia = (data) => {
     const validatedData = validateYplayComlombia(data);
-    console.log(validatedData.packagesname);
+    // console.log(JSON.stringify(validatedData));
     writeToYplayColombiaReport(validatedData);
-    // validatedData.forEach(d => writeToExeptionReportGeneric(d));
 }
 
 const writeBrandReportOld = (data) => {
@@ -126,6 +124,7 @@ const writeBrandReportOld = (data) => {
             if (dealerValidation(data[i])) {
                 const columns = Object.keys(data[i]);
                 let columnCount = 0;
+                let tempCustomerCounter = 0;
                 for (let y = 0; y < columns.length; y++) {
                     switch (columns[y]) {
                         case 'dealer':
@@ -134,34 +133,39 @@ const writeBrandReportOld = (data) => {
                             break;
                         case 'basicCount':
                             worksheetResult.cell((rowCounter + 3), 3).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'compactCount':
                             worksheetResult.cell((rowCounter + 3), 4).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'fullCount':
                             worksheetResult.cell((rowCounter + 3), 5).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'premiumCount':
                             worksheetResult.cell((rowCounter + 3), 6).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'error':
                             worksheetResult.cell((rowCounter + 3), 7).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'test':
                             worksheetResult.cell((rowCounter + 3), 8).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         default:
                             break;
                     }
                     if (columnCount === 7) {
-                        worksheetResult.cell((rowCounter + 3), 9)
-                            .formula(`=SUM(C${rowCounter + 3}:H${rowCounter + 3})`).style(dataStyle);
+                        worksheetResult.cell((rowCounter + 3), 9).number(tempCustomerCounter).style(dataStyle);
                     }
                 }
                 //Validation sheet
@@ -269,6 +273,7 @@ const writeBrandReportNew = (data) => {
             if (dealerValidation(data[i])) {
                 const columns = Object.keys(data[i]);
                 let columnCount = 0;
+                let tempCustomerCounter = 0;
                 for (let y = 0; y < columns.length; y++) {
                     switch (columns[y]) {
                         case 'dealer':
@@ -277,22 +282,24 @@ const writeBrandReportNew = (data) => {
                             break;
                         case 'startCount':
                             worksheetResult.cell((rowCounter + 3), 3).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'premiumCount':
                             worksheetResult.cell((rowCounter + 3), 4).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'test':
                             worksheetResult.cell((rowCounter + 3), 5).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         default:
                             break;
                     }
                     if (columnCount === 4) {
-                        worksheetResult.cell((rowCounter + 3), 6)
-                            .formula(`=SUM(C${rowCounter + 3}:E${rowCounter + 3})`).style(dataStyle);
+                        worksheetResult.cell((rowCounter + 3), 6).number(tempCustomerCounter).style(dataStyle);
                     }
                 }
                 //Validation sheet
@@ -666,8 +673,11 @@ const writeToExeptionReportGeneric = (array) => {
         let rowIndex = 0;
         for (let i = 0; i < array.products.length; i++) {
             for (let y = 0; y < array.products[i].customers.length; y++) {
+                const styleValidation = array.dealerid !== 145 ? dataStyle :
+                    validateLoginTest(array.products[i].customers[y]) ? headerStyle : dataStyle;
+
                 worksheetAllCustomers.cell((rowIndex + 3), 2).string(array.products[i].customers[y].dealer).style(dataStyle);
-                worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.products[i].customers[y].login).style(dataStyle);
+                worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.products[i].customers[y].login).style(styleValidation);
                 worksheetAllCustomers.cell((rowIndex + 3), 4).string(array.products[i].customers[y].product).style(dataStyle);
                 worksheetAllCustomers.cell((rowIndex + 3), 5).date(array.products[i].customers[y].activation).style(dataStyle);
                 rowIndex++;
@@ -683,63 +693,118 @@ const writeToExeptionReportGeneric = (array) => {
 }
 
 const writeToYplayColombiaReport = (array) => {
-
     try {
         //console.log(array.dealer);
         //--------------------test
-        const data = [
-            'CANALES ABIERTOS',
-            'SERVINET - Homepage',
-            'ADULTO',
-            'DESPORTES',
-            'INFANTIL',
-            'PELICULAS Y SERIES',
-            'VARIEDADES',
-            'STINGRAY CO.',
-            'YPLAY Colombia - Local'
-        ]
-        const brands = [
-            {
-                dealer: 'yplaco1',
-                total: 50
-            },
-            {
-                dealer: 'yplaco2',
-                total: 560
-            }
-        ]
+        // const test = require('./test');
         //--------------------test
+        let MAIN_HEADER_ROWS_COUNT = 6; // Will be incremented every line
         const MAIN_HEADER = 'YPLAY COLOMBIA';
         const SECONDARY_HEADER = ['Empresa', 'Total'];
-        const TERTIARY_HEADER = ['Empresa', ...data];
-        const MAIN_HEADER_ROWS_COUNT = 6;
-        const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
+        const TERTIARY_HEADER = ['Empresa', ...array.packagesname]; //Dynamically populate packages
+        const HEADER_CUSTOMERS = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
 
         const workBook = new excel.Workbook();
 
         //------------------------ workSheet 1 ----------------------------
         const workSheetResult = workBook.addWorksheet('Operadora');
 
-        workSheetResult.column(1).setWidth(50);
+        // Set column width based on larger table, table can vary
+        for (let i = 0; i < TERTIARY_HEADER.length; i++) {
+            if (i === 0) {
+                workSheetResult.column(i + 1).setWidth(50);
+            } else {
+                workSheetResult.column(i + 1).setWidth(TERTIARY_HEADER[i].length + 4); // Dynamic width based on string length
+            }
+        }
+
+        //Get total customers
+        const totalCustomer = array.groups.reduce((acc, dealer) => {
+            if (dealer.dealerid !== 153) {
+                return acc + dealer.customersCount;
+            }
+            return acc;
+        }, 0);
+
         workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
         workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
         workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(610).style(dataStyleException2);
+        workSheetResult.cell(5, 2).number(totalCustomer).style(dataStyleException2);
 
+        //Set row height between first and second table
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
             if (i % 2 === 0) {
                 workSheetResult.row(i).setHeight(8);
                 continue;
             }
+            if (i + 1 === MAIN_HEADER_ROWS_COUNT) {
+                MAIN_HEADER_ROWS_COUNT++;
+            }
         }
-        workSheetResult.row(MAIN_HEADER_ROWS_COUNT + 1).filter();
+
+        workSheetResult.row(MAIN_HEADER_ROWS_COUNT).filter(); // Set filter for second table's header
         for (let i = 0; i < SECONDARY_HEADER.length; i++) {
-            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT + 1, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException)
+            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException); // Populate header
         }
-        for (let i = 0; i < array.products.length; i++) {
-            workSheetResult.cell((i + MAIN_HEADER_ROWS_COUNT + 2), 1).string(array.products[i].product).style(dataStyleException3);
-            workSheetResult.cell((i + MAIN_HEADER_ROWS_COUNT + 2), 2).number(array.products[i].customers.length).style(dataStyleException2);
+
+        // Dynamicaly populate second table
+        for (let i = 0; i < array.groups.length; i++) {
+
+            if (array.groups[i].validDealer) { // Checks if it should count dealer
+                MAIN_HEADER_ROWS_COUNT++;
+                workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array.groups[i].dealer.toUpperCase()).style(dataStyleException3);
+                workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(array.groups[i].customersCount).style(dataStyleException2);
+            }
+
+            if (i + 1 === array.groups.length) {
+                MAIN_HEADER_ROWS_COUNT++;
+            }
+        }
+
+        for (let i = 0; i < TERTIARY_HEADER.length; i++) {
+            if (i === 0) {
+                MAIN_HEADER_ROWS_COUNT++; // Jump one line to start new table
+            }
+            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(TERTIARY_HEADER[i]).style(headerStyleException); // Populate header
+        }
+
+        const totals = {};
+        for (let i = 0; i < array.groups.length; i++) {
+
+            if (array.groups[i].validDealer) { // Checks if it should count dealer
+                MAIN_HEADER_ROWS_COUNT++;
+                // First data always deales name
+                workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array.groups[i].dealer.toUpperCase()).style(dataStyleException2);
+
+                // Populate products amounts
+                for (let y = 0; y < TERTIARY_HEADER.length; y++) {
+                    if (y !== 0) {
+                        const index = array.groups[i].products.findIndex(p => p.product === TERTIARY_HEADER[y]); // Get index of current package on TERTIARY_HEADER array
+                        if (index === -1) { // not found
+                            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), y + 1).number(0).style(dataStyleException2);
+                        } else { // Found
+                            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), y + 1).number(array.groups[i].products[index].customers.length).style(dataStyleException2);
+                            typeof totals[TERTIARY_HEADER[y]] === 'undefined' ? totals[TERTIARY_HEADER[y]] = 0 : ''; // Initialize total counter inner propertie with zero if doesn't exist
+                            totals[TERTIARY_HEADER[y]] += array.groups[i].products[index].customers.length; // Counts...
+                        }
+                    }
+                }
+
+            }
+
+            if (i + 1 === array.groups.length) {
+                MAIN_HEADER_ROWS_COUNT++;
+            }
+        }
+
+        for (let i = 0; i < TERTIARY_HEADER.length; i++) {
+            if (i === 0) {
+                MAIN_HEADER_ROWS_COUNT++; // Jump one line to start new table
+                workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string('Total').style(headerStyleException);
+            } else {
+                workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).number(totals[TERTIARY_HEADER[i]]).style(dataStyleException2);
+            }
         }
 
         //------------------------ workSheet 2 ----------------------------
@@ -751,21 +816,24 @@ const writeToYplayColombiaReport = (array) => {
         worksheetAllCustomers.column(5).setWidth(20);
 
         worksheetAllCustomers.row(2).filter();
-        for (let i = 0; i < headerSheetAllcustomers.length; i++) {
-            worksheetAllCustomers.cell(2, (i + 2)).string(headerSheetAllcustomers[i]).style(headerStyle);
+        for (let i = 0; i < HEADER_CUSTOMERS.length; i++) {
+            worksheetAllCustomers.cell(2, (i + 2)).string(HEADER_CUSTOMERS[i]).style(headerStyle);
         }
 
         let rowIndex = 0;
-        for (let i = 0; i < array.products.length; i++) {
-            for (let y = 0; y < array.products[i].customers.length; y++) {
-                worksheetAllCustomers.cell((rowIndex + 3), 2).string(array.products[i].customers[y].dealer).style(dataStyle);
-                worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.products[i].customers[y].login).style(dataStyle);
-                worksheetAllCustomers.cell((rowIndex + 3), 4).string(array.products[i].customers[y].product).style(dataStyle);
-                worksheetAllCustomers.cell((rowIndex + 3), 5).date(array.products[i].customers[y].activation).style(dataStyle);
-                rowIndex++;
+        for (let i = 0; i < array.groups.length; i++) {
+            for (let y = 0; y < array.groups[i].products.length; y++) {
+                for (let j = 0; j < array.groups[i].products[y].customers.length; j++) {
+                    worksheetAllCustomers.cell((rowIndex + 3), 2).string(array.groups[i].products[y].customers[j].dealer).style(dataStyle);
+                    worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.groups[i].products[y].customers[j].login).style(dataStyle);
+                    worksheetAllCustomers.cell((rowIndex + 3), 4).string(array.groups[i].products[y].customers[j].product).style(dataStyle);
+                    worksheetAllCustomers.cell((rowIndex + 3), 5).date(array.groups[i].products[y].customers[j].activation).style(dataStyle);
+                    rowIndex++;
+                }
             }
         }
-        const filename = `RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        //----------------------------------------------------------------
+        const filename = `RELATORIO DE ASSINANTES - YPLAY COLOMBIA - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
         insertFilenameToFilenames(filename)
         workBook.write(filename);
 
