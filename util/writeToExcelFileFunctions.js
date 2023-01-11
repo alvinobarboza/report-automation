@@ -1,6 +1,6 @@
 const excel = require('excel4node');
-const { BASIC, COMPACT, FULL, PREMIUM, URBANTV, ERROR, START } = require('./constants');
-const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange } = require('./dateManipulation');
+const { BASIC, COMPACT, FULL, PREMIUM, URBANTV, ERROR, START, ADULTO } = require('./constants');
+const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange, getCurrentDate } = require('./dateManipulation');
 const { groupByGeneric } = require('./groupByFunctions');
 const { validateYplayExceptions, dealerValidation, validateYplayComlombia, validateLoginTest } = require('./packageValidationFunctions');
 const {
@@ -18,17 +18,17 @@ const {
 } = require('./stylesExcelFile');
 const writePdfFile = require('./writePdfFile');
 const sendEmail = require('./email/mailSender');
+const path = require('path');
+const fs = require('fs');
 
 const FILENAMES = [];
+const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
 
-function insertFilenameToFilenames(filename) {
-    FILENAMES.push({
-        filename: filename,
-        path: `./${filename}`,
-    });
-}
+function writeFile(raw, oldPackaging, newPackaging, dealers) {
 
-function writeFile(oldPackaging, newPackaging, dealers) {
+    createFolderForFile();
+    saveRawData(raw, oldPackaging, newPackaging, dealers);
+
     writeBrandReportOld(oldPackaging);
     writeBrandReportNew(newPackaging);
     writeToExeptionReport([...newPackaging, ...oldPackaging]);
@@ -37,7 +37,7 @@ function writeFile(oldPackaging, newPackaging, dealers) {
     writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
     // Report Astarte
-    writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames);
+    writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
 
     // Report Simba
     writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
@@ -47,6 +47,50 @@ function writeFile(oldPackaging, newPackaging, dealers) {
 
     // Send email
     sendEmail(FILENAMES).catch(e => console.log(e));
+}
+
+function createFolderForFile() {
+    try {
+        if (!fs.existsSync(PATHTOFOLDER)) {
+            fs.mkdirSync(PATHTOFOLDER);
+        }
+    } catch (err) {
+        console.error(err);
+    }
+}
+
+function saveRawData(raw, old, neW, dealers) {
+    fs.writeFileSync(
+        getPath(`raw_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        JSON.stringify(raw, null, 2),
+        'utf-8'
+    );
+    fs.writeFileSync(
+        getPath(`old_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        JSON.stringify(old, null, 2),
+        'utf-8'
+    );
+    fs.writeFileSync(
+        getPath(`new_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        JSON.stringify(neW, null, 2),
+        'utf-8'
+    );
+    fs.writeFileSync(
+        getPath(`dealers_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        JSON.stringify(dealers, null, 2),
+        'utf-8'
+    );
+}
+
+function getPath(filename) {
+    return path.join(PATHTOFOLDER, filename);
+}
+
+function insertFilenameToFilenames(filename) {
+    FILENAMES.push({
+        filename: path.basename(filename),
+        path: filename,
+    });
 }
 
 const writeToYplayColombia = (data) => {
@@ -199,7 +243,7 @@ const writeBrandReportOld = (data) => {
                 }
             }
         }
-        const filename = `Relatório de Licenças Ativas (Antiga Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename = getPath(`Relatório de Licenças Ativas (Antiga Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
         insertFilenameToFilenames(filename);
         workbook.write(filename);
     } catch (error) {
@@ -209,7 +253,7 @@ const writeBrandReportOld = (data) => {
 
 const writeBrandReportNew = (data) => {
     try {
-        const headerSheetResult = ['Brand', START, PREMIUM, 'Usuário teste', 'Total Clientes ativos'];
+        const headerSheetResult = ['Brand', 'CNPJ', START, PREMIUM, 'Usuário teste', ADULTO + '*', 'Total Clientes ativos'];
         const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
         const headerSheetAllcustomersValidation = ['Dealer', 'Customer', 'Pacote', 'Status',];
 
@@ -230,7 +274,9 @@ const writeBrandReportNew = (data) => {
         worksheetResult.column(3).setWidth(20);
         worksheetResult.column(4).setWidth(20);
         worksheetResult.column(5).setWidth(20);
-        worksheetResult.column(6).setWidth(27);
+        worksheetResult.column(6).setWidth(20);
+        worksheetResult.column(7).setWidth(20);
+        worksheetResult.column(8).setWidth(27);
         worksheetResult.row(2).filter();
 
         const worksheetAllCustomers = workbook.addWorksheet('TodosClientes', {
@@ -280,26 +326,34 @@ const writeBrandReportNew = (data) => {
                             worksheetResult.cell((rowCounter + 3), 2).string(data[i][columns[y]].toUpperCase()).style(dataStyle);
                             columnCount++;
                             break;
-                        case 'startCount':
-                            worksheetResult.cell((rowCounter + 3), 3).number(data[i][columns[y]]).style(dataStyle);
-                            tempCustomerCounter += data[i][columns[y]];
+                        case 'cnpj':
+                            worksheetResult.cell((rowCounter + 3), 3).string(data[i][columns[y]].toUpperCase()).style(dataStyle);
                             columnCount++;
                             break;
-                        case 'premiumCount':
+                        case 'startCount':
                             worksheetResult.cell((rowCounter + 3), 4).number(data[i][columns[y]]).style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
-                        case 'test':
+                        case 'premiumCount':
                             worksheetResult.cell((rowCounter + 3), 5).number(data[i][columns[y]]).style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
+                            columnCount++;
+                            break;
+                        case 'test':
+                            worksheetResult.cell((rowCounter + 3), 6).number(data[i][columns[y]]).style(dataStyle);
+                            tempCustomerCounter += data[i][columns[y]];
+                            columnCount++;
+                            break;
+                        case 'adultoCount':
+                            worksheetResult.cell((rowCounter + 3), 7).number(data[i][columns[y]]).style(dataStyle);
                             columnCount++;
                             break;
                         default:
                             break;
                     }
-                    if (columnCount === 4) {
-                        worksheetResult.cell((rowCounter + 3), 6).number(tempCustomerCounter).style(dataStyle);
+                    if (columnCount === 6) {
+                        worksheetResult.cell((rowCounter + 3), 8).number(tempCustomerCounter).style(dataStyle);
                     }
                 }
                 //Validation sheet
@@ -333,7 +387,7 @@ const writeBrandReportNew = (data) => {
                 }
             }
         }
-        const filename = `Relatório de Licenças Ativas (Nova Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename = getPath(`Relatório de Licenças Ativas (Nova Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`)
         insertFilenameToFilenames(filename);
         workbook.write(filename);
     } catch (error) {
@@ -540,7 +594,7 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
         }
 
         //============================================================================
-        const filename = `RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename = getPath(`RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
         insertFilenameToFilenames(filename);
         workbook.write(filename);
     } catch (error) {
@@ -604,8 +658,8 @@ const writeProgramadorasReportGeneric = (old, neW) => {
             }
         }
         //console.table(dealers);
-        const filename1 = `RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
-        const filename2 = `RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename1 = getPath(`RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename2 = getPath(`RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
         insertFilenameToFilenames(filename1);
         insertFilenameToFilenames(filename2)
 
@@ -683,7 +737,7 @@ const writeToExeptionReportGeneric = (array) => {
                 rowIndex++;
             }
         }
-        const filename = `RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename = getPath(`RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
         insertFilenameToFilenames(filename)
         workBook.write(filename);
 
@@ -833,7 +887,7 @@ const writeToYplayColombiaReport = (array) => {
             }
         }
         //----------------------------------------------------------------
-        const filename = `RELATORIO DE ASSINANTES - YPLAY COLOMBIA - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`;
+        const filename = getPath(`RELATORIO DE ASSINANTES - YPLAY COLOMBIA - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
         insertFilenameToFilenames(filename)
         workBook.write(filename);
 

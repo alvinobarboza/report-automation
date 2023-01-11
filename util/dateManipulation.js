@@ -48,6 +48,10 @@ const convertTimestampToYearMonthDay = (timestamp) => {
     return { year, month, day };
 }
 
+const getCurrentDate = () => {
+    return new Date().toISOString().split('T')[0]
+}
+
 module.exports = {
     getDateAstertes,
     getDateRange,
@@ -56,5 +60,6 @@ module.exports = {
     getCurrentYear,
     getLastMonthTimestamp,
     getCurrentMonthYearShort,
-    convertTimestampToYearMonthDay
+    convertTimestampToYearMonthDay,
+    getCurrentDate
 }

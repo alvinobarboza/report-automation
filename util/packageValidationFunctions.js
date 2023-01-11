@@ -1,47 +1,52 @@
-const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR, YPLAYPACOTEPREMIUM, YPLAYPACOTESTART, CANAISLOCAIS, START } = require("./constants");
+const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR, YPLAYPACOTEPREMIUM, YPLAYPACOTESTART, CANAISLOCAIS, START, YPLAYADULTO } = require("./constants");
 const { groupByGeneric } = require("./groupByFunctions");
 
 // Main function
-function validation(data, activeCustomers) {
+async function validation(data, activeCustomers, dealers) {
     const oldPackage = [];
     const newPackage = [];
+    try {
+        // =======Active/Inactive======
 
-    // =======Active/Inactive======
-
-    for (let i = 0; i < data.length; i++) {
-        let activeCount = 0;
-        for (let j = 0; j < data[i].customers.length; j++) {
-            data[i].customers[j].isactive = false;
-            for (let y = 0; y < activeCustomers.length; y++) {
-                if (activeCustomers[y].mwid === data[i].customers[j].products[0].idmw) {
-                    data[i].customers[j].isactive = true;
-                    activeCount++;
+        for (let i = 0; i < data.length; i++) {
+            let activeCount = 0;
+            for (let j = 0; j < data[i].customers.length; j++) {
+                data[i].customers[j].isactive = false;
+                for (let y = 0; y < activeCustomers.length; y++) {
+                    if (activeCustomers[y].mwid === data[i].customers[j].products[0].idmw) {
+                        data[i].customers[j].isactive = true;
+                        activeCount++;
+                    }
                 }
             }
+            data[i].activeCount = activeCount;
         }
-        data[i].activeCount = activeCount;
-    }
 
-    // ============================
+        // ============================
 
-    // Seperation for new and old packaging 
-    for (let i = 0; i < data.length; i++) {
-        let test = false;
-        for (let y = 0; y < data[i].customers.length; y++) {
-            for (let x = 0; x < data[i].customers[y].products.length; x++) {
-                data[i].dealerid = data[i].customers[y].products[x].dealerid;
-                if (data[i].customers[y].products[x].productid === YPLAYPACOTEPREMIUM ||
-                    data[i].customers[y].products[x].productid === YPLAYPACOTESTART ||
-                    data[i].customers[y].products[x].product.includes(CANAISLOCAIS)) {
-                    test = true;
+        // Seperation for new and old packaging 
+        for (let i = 0; i < data.length; i++) {
+            let test = false;
+            for (let y = 0; y < data[i].customers.length; y++) {
+                for (let x = 0; x < data[i].customers[y].products.length; x++) {
+                    data[i].dealerid = data[i].customers[y].products[x].dealerid;
+                    if (data[i].customers[y].products[x].productid === YPLAYPACOTEPREMIUM ||
+                        data[i].customers[y].products[x].productid === YPLAYPACOTESTART ||
+                        data[i].customers[y].products[x].product.includes(CANAISLOCAIS)) {
+                        test = true;
+                    }
                 }
             }
+            if (test) {
+                newPackage.push(data[i]);
+            } else {
+                oldPackage.push(data[i]);
+            }
+            data[i].cnpj = await dealers.find(d => d.id === data[i].dealerid).cnpj;
         }
-        if (test) {
-            newPackage.push(data[i]);
-        } else {
-            oldPackage.push(data[i]);
-        }
+
+    } catch (error) {
+        console.log(error);
     }
     const oldPackaging = validationOldProducts(oldPackage);
     const newPackaging = validationNewProducts(newPackage);
@@ -128,6 +133,7 @@ function validationNewProducts(data) {
             let startActiveCount = 0;
             let premiumCount = 0;
             let premiumActiveCount = 0;
+            let adultoCount = 0;
             let test = 0;
             if (dealerValidation(data[indexD])) {
                 for (let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
@@ -135,7 +141,7 @@ function validationNewProducts(data) {
                         test++;
                         continue;
                     }
-                    const { pacoteYplayStatus, pacoteYplay } = validateProductsNew(data[indexD].customers[indexC]);
+                    const { pacoteYplayStatus, pacoteYplay, pacoteAdulto } = validateProductsNew(data[indexD].customers[indexC]);
                     data[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
                     data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
                     switch (pacoteYplay) {
@@ -154,12 +160,16 @@ function validationNewProducts(data) {
                         default:
                             break;
                     }
+                    if (pacoteAdulto) {
+                        adultoCount++;
+                    }
                 }
             }
             data[indexD].startCount = startCount;
             data[indexD].startActiveCount = startActiveCount;
             data[indexD].premiumCount = premiumCount;
             data[indexD].premiumActiveCount = premiumActiveCount;
+            data[indexD].adultoCount = adultoCount;
             data[indexD].test = test;
         }
     } catch (error) {
@@ -206,6 +216,7 @@ function validateProductsNew(customer) {
     let start = false;
     let premium = false;
     let locais = false;
+    let adulto = false;
 
     for (let i = 0; i < customer.products.length; i++) {
         if (customer.products[i].productid === YPLAYPACOTESTART) {
@@ -215,9 +226,12 @@ function validateProductsNew(customer) {
         } else if (customer.products[i].product.includes(CANAISLOCAIS)) {
             locais = true;
         }
+        if (customer.products[i].productid === YPLAYADULTO) {
+            adulto = true;
+        }
     };
 
-    return validateYplayProductNew(start, premium, locais);
+    return validateYplayProductNew(start, premium, locais, adulto);
 }
 
 function validateYplayProductOld(validator) {
@@ -252,9 +266,10 @@ function validateYplayProductOld(validator) {
     return { pacoteYplay, pacoteYplayStatus, urban };
 }
 
-function validateYplayProductNew(start, premium, locais) {
+function validateYplayProductNew(start, premium, locais, adulto) {
     let pacoteYplay = '';
     let pacoteYplayStatus = '';
+    let pacoteAdulto = adulto;
 
     if (start && locais && premium === false) {
         // start+locais = start
@@ -285,7 +300,7 @@ function validateYplayProductNew(start, premium, locais) {
         pacoteYplay = START;
         pacoteYplayStatus = ERROR;
     }
-    return { pacoteYplay, pacoteYplayStatus };
+    return { pacoteYplay, pacoteYplayStatus, pacoteAdulto };
 }
 
 function checkProduts(caseTest, check) {
@@ -309,9 +324,9 @@ function validateYplayExceptions(data) {
             case 87: // 'nbs'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
-            case 26: // 'NOVANET'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
-                break;
+            // case 26: // 'NOVANET'
+            //     addToProductCounterCustomers(data[index], productCounterCustomers);
+            //     break;
             case 19: // 'ADYLNET'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
@@ -439,7 +454,7 @@ function dealerValidation(customer) {
         customer.dealerid !== 18 &&// 'HSL'
         customer.dealerid !== 22 && // 'ADMIN-YOUCAST' 
         customer.dealerid !== 21 && // 'LBR'
-        customer.dealerid !== 26 && // 'NOVANET'
+        // customer.dealerid !== 26 && // 'NOVANET'
         customer.dealerid !== 37 && // 'softxx'
         customer.dealerid !== 55 && // 'net-angra'
         customer.dealerid !== 87 && // 'nbs'

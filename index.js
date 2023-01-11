@@ -44,11 +44,11 @@ const getDealersData = () => getReport(
     )
 );
 
-Promise.all([getCustomersData(), getDealersData(), getActiveCustomers()]).then((result) => {
+Promise.all([getCustomersData(), getDealersData(), getActiveCustomers()]).then(async (result) => {
     const [customers, dealers, activeCustomers] = result;
     const groupedData = groupByDealerByCustomer(customers.response.rows);
-    const { newPackaging, oldPackaging } = validation(groupedData, activeCustomers.response.rows);
-    writeFile(oldPackaging, newPackaging, dealers.response.rows);
+    const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
+    writeFile(customers.response.rows, oldPackaging, newPackaging, dealers.response.rows);
 }).catch((err) => {
     console.table(err);
 });

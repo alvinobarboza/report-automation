@@ -7,6 +7,7 @@ const ERROR = 'ERRO';
 
 const YPLAYPACOTEPREMIUM = 688;
 const YPLAYPACOTESTART = 687;
+const YPLAYADULTO = 574;
 const CANAISLOCAIS = 'Canais Locais -';
 
 const START = 'Start';
@@ -15,6 +16,7 @@ const COMPACT = 'Compact';
 const FULL = 'Full';
 const PREMIUM = 'Premium';
 const URBANTV = 'UrbanTV';
+const ADULTO = 'Adulto';
 
 const switchCase = {
     'Yplay Light': (t) => {
@@ -76,6 +78,7 @@ module.exports = {
     ERROR,
     YPLAYPACOTEPREMIUM,
     YPLAYPACOTESTART,
+    YPLAYADULTO,
     CANAISLOCAIS,
     START,
     BASIC,
@@ -83,5 +86,6 @@ module.exports = {
     FULL,
     PREMIUM,
     URBANTV,
+    ADULTO,
     switchCase
 }
