@@ -15,9 +15,9 @@ async function sendEmail(files) {
         await delay(15000);
 
         const emails = [
-            'daniel.campos@youcast.tv.br',
-            'vinicius.okaeda@youcast.tv.br',
-            'carlos.salce@youcast.tv.br',
+            // 'daniel.campos@youcast.tv.br',
+            // 'vinicius.okaeda@youcast.tv.br',
+            // 'carlos.salce@youcast.tv.br',
             'alvino.barboza@youcast.tv.br',
         ];
         const bodyPlainText = `

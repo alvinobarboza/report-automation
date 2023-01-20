@@ -1,4 +1,20 @@
-const { BASIC, COMPACT, PREMIUM, URBANTV, SUCCESS, switchCase, FULL, ERROR, YPLAYPACOTEPREMIUM, YPLAYPACOTESTART, CANAISLOCAIS, START, YPLAYADULTO } = require("./constants");
+const {
+    BASIC,
+    COMPACT,
+    PREMIUM,
+    URBANTV,
+    SUCCESS,
+    switchCase,
+    FULL,
+    ERROR,
+    YPLAYPACOTEPREMIUM,
+    YPLAYPACOTESTART,
+    CANAISLOCAIS,
+    START,
+    YPLAYADULTO,
+    STINGRAYBRASIL,
+    STINGRAYCOLOMBIA,
+} = require("./constants");
 const { groupByGeneric } = require("./groupByFunctions");
 
 // Main function
@@ -26,23 +42,37 @@ async function validation(data, activeCustomers, dealers) {
 
         // Seperation for new and old packaging 
         for (let i = 0; i < data.length; i++) {
-            let test = false;
+            let isNew = false;
+            let counterStingray = 0;
+            let counterStingrayCo = 0;
             for (let y = 0; y < data[i].customers.length; y++) {
+                let stingray = false;
+                let stingrayco = false;
                 for (let x = 0; x < data[i].customers[y].products.length; x++) {
                     data[i].dealerid = data[i].customers[y].products[x].dealerid;
                     if (data[i].customers[y].products[x].productid === YPLAYPACOTEPREMIUM ||
                         data[i].customers[y].products[x].productid === YPLAYPACOTESTART ||
                         data[i].customers[y].products[x].product.includes(CANAISLOCAIS)) {
-                        test = true;
+                        isNew = true;
+                    }
+                    if (data[i].customers[y].isactive) {
+                        stingray = validateStingrayPackage(data[i].customers[y].products[x], stingray);
+                        stingrayco = validateStingrayColombiaPackage(data[i].customers[y].products[x], stingrayco);
                     }
                 }
+                stingray ? counterStingray++ : 0;
+                stingrayco ? counterStingrayCo++ : 0;
+                data[i].customers[y].stingray = stingray;
+                data[i].customers[y].stingrayco = stingrayco;
             }
-            if (test) {
+            data[i].countStingray = counterStingray;
+            data[i].countStingrayCo = counterStingrayCo;
+            data[i].cnpj = await dealers.find(d => d.id === data[i].dealerid).cnpj;
+            if (isNew) {
                 newPackage.push(data[i]);
             } else {
                 oldPackage.push(data[i]);
             }
-            data[i].cnpj = await dealers.find(d => d.id === data[i].dealerid).cnpj;
         }
 
     } catch (error) {
@@ -51,6 +81,24 @@ async function validation(data, activeCustomers, dealers) {
     const oldPackaging = validationOldProducts(oldPackage);
     const newPackaging = validationNewProducts(newPackage);
     return { oldPackaging, newPackaging };
+}
+
+function validateStingrayColombiaPackage(product, valide) {
+    for (let j = 0; j < STINGRAYCOLOMBIA.length; j++) {
+        if (product.productid === STINGRAYCOLOMBIA[j] && !validateLoginTest(product)) {
+            valide = true;
+        }
+    }
+    return valide;
+}
+
+function validateStingrayPackage(product, valide) {
+    for (let j = 0; j < STINGRAYBRASIL.length; j++) {
+        if (product.productid === STINGRAYBRASIL[j] && !validateLoginTest(product)) {
+            valide = true;
+        }
+    }
+    return valide;
 }
 
 function validationOldProducts(data) {
