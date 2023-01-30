@@ -506,7 +506,7 @@ function dealerValidation(customer) {
         customer.dealerid !== 37 && // 'softxx'
         customer.dealerid !== 55 && // 'net-angra'
         customer.dealerid !== 87 && // 'nbs'
-        customer.dealerid !== 113 && // 'giganet-ro'
+        // customer.dealerid !== 113 && // 'giganet-ro'
         customer.dealerid !== 118 && // 'WECLIX'
         customer.dealerid !== 124 && // 'AGE TELECOM'
         customer.dealerid !== 123 && // 'CCS'
