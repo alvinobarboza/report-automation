@@ -67,7 +67,7 @@ async function validation(data, activeCustomers, dealers) {
             }
             data[i].countStingray = counterStingray;
             data[i].countStingrayCo = counterStingrayCo;
-            data[i].cnpj = await dealers.find(d => d.id === data[i].dealerid).cnpj;
+            data[i].cnpj = await dealers.find(d => d.id === data[i].dealerid)?.cnpj;
             if (isNew) {
                 newPackage.push(data[i]);
             } else {
