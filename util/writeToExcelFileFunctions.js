@@ -32,28 +32,28 @@ function writeFile(raw, oldPackaging, newPackaging, dealers) {
 
         writeBrandReportOld(oldPackaging);
         writeBrandReportNew(newPackaging);
-        // writeToExeptionReport([...newPackaging, ...oldPackaging]);
+        writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
         // Report Singray
-        // writeStingrayReport([...oldPackaging, ...newPackaging]);
+        writeStingrayReport([...oldPackaging, ...newPackaging]);
 
         // Report SingrayCo
-        // writeStingrayReportCo([...oldPackaging, ...newPackaging]);
+        writeStingrayReportCo([...oldPackaging, ...newPackaging]);
 
         // Report Yplay colombia
-        // writeToYplayColombia([...newPackaging, ...oldPackaging]);
+        writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
         // Report Astarte
-        // writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
+        writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
 
         // Report Simba
-        // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+        writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
         // Report CNN / FISH
-        // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+        writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
         // Send email
-        // sendEmail(FILENAMES).catch(e => console.log(e));
+        sendEmail(FILENAMES).catch(e => console.log(e));
     } catch (error) {
         console.log(error);
     }
