@@ -25,35 +25,52 @@ const { setDefaultResultOrder } = require('dns');
 const FILENAMES = [];
 const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
 
-function writeFile(raw, oldPackaging, newPackaging, dealers) {
+function writeFile(
+    // raw, 
+    // oldPackaging, 
+    // newPackaging, 
+    // dealers,
+    urban,
+    urbanData
+) {
     try {
         createFolderForFile();
-        saveRawData(raw, oldPackaging, newPackaging, dealers);
+        // saveRawData(
+        //     raw, 
+        //     oldPackaging, 
+        //     newPackaging, 
+        //     dealers,
+        //     urbanData
+        // );
 
-        writeBrandReportOld(oldPackaging);
-        writeBrandReportNew(newPackaging);
-        writeToExeptionReport([...newPackaging, ...oldPackaging]);
+        // writeBrandReportOld(oldPackaging);
+        // writeBrandReportNew(newPackaging);
+        // writeToExeptionReport([...newPackaging, ...oldPackaging]);
+
+        // Report Urban 
+        writeUrbanActiveCustomer(urban);
+        writeUrbanSubscribedCustomer(urban);
 
         // Report Singray
-        writeStingrayReport([...oldPackaging, ...newPackaging]);
+        // writeStingrayReport([...oldPackaging, ...newPackaging]);
 
         // Report SingrayCo
-        writeStingrayReportCo([...oldPackaging, ...newPackaging]);
+        // writeStingrayReportCo([...oldPackaging, ...newPackaging]);
 
         // Report Yplay colombia
-        writeToYplayColombia([...newPackaging, ...oldPackaging]);
+        // writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
         // Report Astarte
-        writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
+        // writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
 
         // Report Simba
-        writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+        // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
         // Report CNN / FISH
-        writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+        // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
         // Send email
-        sendEmail(FILENAMES).catch(e => console.log(e));
+        // sendEmail(FILENAMES).catch(e => console.log(e));
     } catch (error) {
         console.log(error);
     }
@@ -882,6 +899,61 @@ const writeProgramadorasReportGeneric = (old, neW) => {
     }
 }
 
+const writeUrbanActiveCustomer = (data) => {
+    try {
+        const stringDate = getDateRange();
+        let amount = data.reduce((acc, vendor) => acc += vendor.active, 0);
+
+        const constantValuesResultSheet = [
+            'COMPÊTENCIA',
+            'NUMERO DE ASSINANTES',
+            'VALOR UNITARIO POR ASSINANTES',
+            'VALOR EM REAIS TOTAL A SER FATURADO (MG)'
+        ];
+        const tableData = [stringDate, amount, 'R$', 'R$'];
+        const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
+
+        const workbook = new excel.Workbook({
+            defaultFont: {
+                color: '#000000',
+                size: 12
+            },
+        });
+
+        const worksheetResult = workbook.addWorksheet('Operadora', {
+            sheetView: {
+                showGridLines: false
+            }
+        });
+        worksheetResult.row(1).setHeight(25);
+        worksheetResult.column(1).setWidth(45);
+        worksheetResult.column(2).setWidth(35);
+
+        worksheetResult.cell(1, 1, 1, 2, true).string(MAINHEADER).style(headerStyle);
+        for (let i = 0; i < constantValuesResultSheet.length; i++) {
+            worksheetResult.cell((i + 2), 1).string(constantValuesResultSheet[i]).style(dataStyle);
+        }
+        for (let i = 0; i < tableData.length; i++) {
+            if (typeof tableData[i] === 'number') {
+                worksheetResult.cell((i + 2), 2)
+                    .number(tableData[i])
+                    .style({ ...dataStyle, alignment: { horizontal: ['right'] } })
+            } else {
+                worksheetResult.cell((i + 2), 2)
+                    .string(tableData[i])
+                    .style({ ...dataStyle, alignment: { horizontal: ['right'] } })
+            }
+        }
+        //console.table(dealers);
+        const filename = getPath(`RELATORIO DE ASSINANTES ATIVOS - URBANTV - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        insertFilenameToFilenames(filename);
+
+        workbook.write(filename);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
 const writeToExeptionReport = (data) => {
     const validatedData = validateYplayExceptions(data);
     // validatedData.forEach(data => console.log(data));
@@ -1100,6 +1172,69 @@ const writeToYplayColombiaReport = (array) => {
         }
         //----------------------------------------------------------------
         const filename = getPath(`RELATORIO DE ASSINANTES - YPLAY COLOMBIA - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        insertFilenameToFilenames(filename)
+        workBook.write(filename);
+
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+const writeUrbanSubscribedCustomer = (array) => {
+    try {
+        //console.log(array.dealer);
+        //--------------------test
+        // const test = require('./test');
+        //--------------------test
+        let MAIN_HEADER_ROWS_COUNT = 6; // Will be incremented every line
+        const MAIN_HEADER = 'URBAN TV';
+        const SECONDARY_HEADER = ['Empresa', 'Total'];
+
+        const workBook = new excel.Workbook();
+
+        //------------------------ workSheet 1 ----------------------------
+        const workSheetResult = workBook.addWorksheet('Operadora');
+        workSheetResult.column(1).setWidth(50);
+        workSheetResult.column(2).setWidth(11);
+
+        //Get total customers
+        const totalCustomer = array.reduce((acc, vendor) => acc += vendor.subscribed, 0);
+
+        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
+        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
+        workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
+        workSheetResult.cell(5, 2).number(totalCustomer).style(dataStyleException2);
+
+        //Set row height between first and second table
+        for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
+            if (i % 2 === 0) {
+                workSheetResult.row(i).setHeight(8);
+                continue;
+            }
+            if (i + 1 === MAIN_HEADER_ROWS_COUNT) {
+                MAIN_HEADER_ROWS_COUNT++;
+            }
+        }
+
+        workSheetResult.row(MAIN_HEADER_ROWS_COUNT).filter(); // Set filter for second table's header
+        for (let i = 0; i < SECONDARY_HEADER.length; i++) {
+            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException); // Populate header
+        }
+
+        // Dynamicaly populate second table
+        for (let i = 0; i < array.length; i++) {
+            MAIN_HEADER_ROWS_COUNT++;
+            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array[i]['vendors_name'].toUpperCase()).style(dataStyleException3);
+            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(array[i].subscribed).style(dataStyleException2);
+
+            if (i + 1 === array.length) {
+                MAIN_HEADER_ROWS_COUNT++;
+            }
+        }
+
+        //----------------------------------------------------------------
+        const filename = getPath(`RELATORIO DE ASSINANTES CADASTRADOS - URBANTV - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
         insertFilenameToFilenames(filename)
         workBook.write(filename);
 
