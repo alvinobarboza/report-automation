@@ -69,25 +69,25 @@ const getDealersData = () => getReport(
 // main();
 
 Promise.all([
-    // getCustomersData(), 
-    // getDealersData(), 
-    // getActiveCustomers(),
+    getCustomersData(),
+    getDealersData(),
+    getActiveCustomers(),
     getUrbanReports()
 ]).then(async (result) => {
     const [
-        // customers, 
-        // dealers, 
-        // activeCustomers, 
+        customers,
+        dealers,
+        activeCustomers,
         urban
     ] = result;
-    // const groupedData = groupByDealerByCustomer(customers.response.rows);
+    const groupedData = groupByDealerByCustomer(customers.response.rows);
     const validatedUrban = validationUrban(urban.response.rows);
-    // const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
+    const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
     writeFile(
-        // customers.response.rows, 
-        // oldPackaging, 
-        // newPackaging, 
-        // dealers.response.rows,
+        customers.response.rows,
+        oldPackaging,
+        newPackaging,
+        dealers.response.rows,
         validatedUrban,
         urban.response.rows
     );

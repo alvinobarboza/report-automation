@@ -26,51 +26,51 @@ const FILENAMES = [];
 const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
 
 function writeFile(
-    // raw, 
-    // oldPackaging, 
-    // newPackaging, 
-    // dealers,
+    raw,
+    oldPackaging,
+    newPackaging,
+    dealers,
     urban,
     urbanData
 ) {
     try {
         createFolderForFile();
-        // saveRawData(
-        //     raw, 
-        //     oldPackaging, 
-        //     newPackaging, 
-        //     dealers,
-        //     urbanData
-        // );
+        saveRawData(
+            raw,
+            oldPackaging,
+            newPackaging,
+            dealers,
+            urbanData
+        );
 
-        // writeBrandReportOld(oldPackaging);
-        // writeBrandReportNew(newPackaging);
-        // writeToExeptionReport([...newPackaging, ...oldPackaging]);
+        writeBrandReportOld(oldPackaging);
+        writeBrandReportNew(newPackaging);
+        writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
         // Report Urban 
         writeUrbanActiveCustomer(urban);
         writeUrbanSubscribedCustomer(urban);
 
         // Report Singray
-        // writeStingrayReport([...oldPackaging, ...newPackaging]);
+        writeStingrayReport([...oldPackaging, ...newPackaging]);
 
         // Report SingrayCo
-        // writeStingrayReportCo([...oldPackaging, ...newPackaging]);
+        writeStingrayReportCo([...oldPackaging, ...newPackaging]);
 
         // Report Yplay colombia
-        // writeToYplayColombia([...newPackaging, ...oldPackaging]);
+        writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
         // Report Astarte
-        // writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
+        writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
 
         // Report Simba
-        // writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+        writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
         // Report CNN / FISH
-        // writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+        writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
         // Send email
-        // sendEmail(FILENAMES).catch(e => console.log(e));
+        sendEmail(FILENAMES).catch(e => console.log(e));
     } catch (error) {
         console.log(error);
     }
@@ -288,7 +288,7 @@ function createFolderForFile() {
     }
 }
 
-function saveRawData(raw, old, neW, dealers) {
+function saveRawData(raw, old, neW, dealers, urbanData) {
     fs.writeFileSync(
         getPath(`raw_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
         JSON.stringify(raw, null, 2),
@@ -307,6 +307,11 @@ function saveRawData(raw, old, neW, dealers) {
     fs.writeFileSync(
         getPath(`dealers_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
         JSON.stringify(dealers, null, 2),
+        'utf-8'
+    );
+    fs.writeFileSync(
+        getPath(`urbanData_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        JSON.stringify(urbanData, null, 2),
         'utf-8'
     );
 }
