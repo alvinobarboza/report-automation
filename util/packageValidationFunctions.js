@@ -393,6 +393,9 @@ function validateYplayExceptions(data) {
             case 145: // 'giga-fibra-co'
                 addToProductCounterCustomers(data[index], productCounterCustomers);
                 break;
+            case 140: // 'MASTER'
+                addToProductCounterCustomers(data[index], productCounterCustomers);
+                break;
             default:
                 break;
         }
