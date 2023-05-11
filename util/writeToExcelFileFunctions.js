@@ -769,7 +769,7 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
                 vertical: ['center']
             },
         });
-        worksheetResult.cell(4, 2).number(1.6).style({
+        worksheetResult.cell(4, 2).number(1.69).style({
             ...dataStyleSimba,
             alignment: {
                 horizontal: ['center'],
@@ -784,7 +784,7 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
                 vertical: ['center']
             },
         });
-        worksheetResult.cell(6, 2).number(amount * 1.6).style({
+        worksheetResult.cell(6, 2).number(amount * 1.69).style({
             ...dataStyleSimba,
             alignment: {
                 horizontal: ['center'],

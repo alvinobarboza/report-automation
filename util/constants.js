@@ -95,6 +95,33 @@ const mwHeader = (token) => {
     return { 'Authorization-user': token }
 }
 
+const TELEMEDICINA_QUERY = `
+select 
+	p.partners_name  as empresa,
+	c.customer_id as id,
+	c.customer_ext_sms_id as smsid,
+	c.customer_ext_mw_id as mwid,
+	c.customer_partners_id as partnerid,
+	cs.customer_svas_status as status,
+	cs.customer_svas_issmsactive as issmsactive,
+	cs.customer_svas_types as "type",
+	s.svas_name as svaname,
+	s.svas_enum as svaenum ,
+	sp.svas_packages_ext_products_id as productid
+from 
+	customer_svas cs
+	inner join customer c on c.customer_id = cs.customer_svas_customer_id 
+	inner join svas s on cs.customer_svas_svas_id = s.svas_id 
+	inner join partners p on p.partners_id = c.customer_partners_id 
+	inner join svas_packages sp on sp.svas_packages_svas_id = s.svas_id and 
+	sp.svas_packages_platforms_id = p.partners_platforms_id 
+	inner join package_types pt on pt.package_types_id = sp.svas_packages_package_types_id and 
+	pt.package_types_type = cs.customer_svas_types
+where 
+	customer_svas_status is true and 
+	svas_enum = 'TELEMEDICINA'
+`;
+
 module.exports = {
     SMSURL,
     MWURL,
@@ -118,5 +145,6 @@ module.exports = {
     PREMIUM,
     URBANTV,
     ADULTO,
-    switchCase
+    switchCase,
+    TELEMEDICINA_QUERY
 }

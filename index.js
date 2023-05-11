@@ -2,9 +2,13 @@ const { groupByDealerByCustomer, groupByGeneric } = require("./util/groupByFunct
 const { writeFile } = require("./util/writeToExcelFileFunctions");
 const { getReport, getToken } = require("./util/moTVCalls");
 require('dotenv').config();
-const { smsBody, smsHeader, REPORT, SMSURL, MWURL, mwBody, mwHeader, } = require("./util/constants");
+const { smsBody, smsHeader, REPORT, SMSURL, MWURL, mwBody, mwHeader, TELEMEDICINA_QUERY, } = require("./util/constants");
 const { validation } = require("./util/packageValidationFunctions");
 const { validationUrban } = require("./util/urbanValidation");
+
+const pool = require("./util/dbconnection.js");
+const { validateTelemedicinaData } = require("./util/validateTelemedicinaCustomer");
+const telemedicina = pool.query(TELEMEDICINA_QUERY);
 
 const LOGINSMS = process.env.loginSMS
 const SECRETSMS = process.env.secretSMS
@@ -16,6 +20,18 @@ const REPORTBRAND = 119;
 const REPORTDEALERS = 126;
 const REPORTACTIVECUSTOMERS = 118;
 const REPORTURBANTV = 88;
+const TELEMEDICINAREPORT = 263;
+
+const getTelemedicinaData = () => getReport(
+    SMSURL + REPORT,
+    smsBody(TELEMEDICINAREPORT),
+    smsHeader(
+        getToken(
+            LOGINSMS,
+            SECRETSMS
+        )
+    )
+);
 
 const getActiveCustomers = () => getReport(
     MWURL + REPORT,
@@ -43,6 +59,7 @@ const getCustomersData = () => getReport(
         )
     )
 );
+
 const getDealersData = () => getReport(
     SMSURL + REPORT,
     smsBody(REPORTDEALERS),
@@ -69,28 +86,45 @@ const getDealersData = () => getReport(
 // main();
 
 Promise.all([
-    getCustomersData(),
-    getDealersData(),
-    getActiveCustomers(),
-    getUrbanReports()
+    // getCustomersData(),
+    // getDealersData(),
+    // getActiveCustomers(),
+    // getUrbanReports(),
+    telemedicina,
+    getTelemedicinaData()
 ]).then(async (result) => {
+    // const [
+        //     customers,
+        //     dealers,
+        //     activeCustomers,
+        //     urban
+        // ] = result;
     const [
-        customers,
-        dealers,
-        activeCustomers,
-        urban
+        telemedicinaActive,
+        telemedicinaSubscribed
     ] = result;
-    const groupedData = groupByDealerByCustomer(customers.response.rows);
-    const validatedUrban = validationUrban(urban.response.rows);
-    const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
-    writeFile(
-        customers.response.rows,
-        oldPackaging,
-        newPackaging,
-        dealers.response.rows,
-        validatedUrban,
-        urban.response.rows
-    );
+
+    const telemedicinaValidatedData = validateTelemedicinaData(telemedicinaActive.rows, telemedicinaSubscribed.response.rows);
+
+    let i = 0;
+    for (const key in telemedicinaValidatedData) {
+        if(telemedicinaValidatedData[key].products.length > 1){
+            ++i;
+            console.log(i);
+        }
+    }
+
+    // const groupedData = groupByDealerByCustomer(customers.response.rows);
+    // const validatedUrban = validationUrban(urban.response.rows);
+    // const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
+    // writeFile(
+    //     customers.response.rows,
+    //     oldPackaging,
+    //     newPackaging,
+    //     dealers.response.rows,
+    //     validatedUrban,
+    //     urban.response.rows
+    // );
 }).catch((err) => {
     console.table(err);
 });
