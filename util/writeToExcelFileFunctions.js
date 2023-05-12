@@ -20,60 +20,65 @@ const writePdfFile = require('./writePdfFile');
 const sendEmail = require('./email/mailSender');
 const path = require('path');
 const fs = require('fs');
-const { setDefaultResultOrder } = require('dns');
+const { setDefaultResultOrder, FILE } = require('dns');
+const { writeTelemdicinaReport } = require('./writeTelemedicinaReport');
 
 const FILENAMES = [];
 const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
 
 function writeFile(
-    raw,
-    oldPackaging,
-    newPackaging,
-    dealers,
-    urban,
-    urbanData
-) {
-    try {
+    // raw,
+    // oldPackaging,
+    // newPackaging,
+    // dealers,
+    // urban,
+    // urbanData,
+    telemedicinaData
+    ) {
         createFolderForFile();
-        saveRawData(
-            raw,
-            oldPackaging,
-            newPackaging,
-            dealers,
-            urbanData
-        );
+        writeTelemdicinaReport(telemedicinaData, getPath, insertFilenameToFilenames);
+        console.log(FILENAMES);
+    // try {
+    //     createFolderForFile();
+    //     saveRawData(
+    //         raw,
+    //         oldPackaging,
+    //         newPackaging,
+    //         dealers,
+    //         urbanData
+    //     );
 
-        writeBrandReportOld(oldPackaging);
-        writeBrandReportNew(newPackaging);
-        writeToExeptionReport([...newPackaging, ...oldPackaging]);
+    //     writeBrandReportOld(oldPackaging);
+    //     writeBrandReportNew(newPackaging);
+    //     writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
-        // Report Urban 
-        writeUrbanActiveCustomer(urban);
-        writeUrbanSubscribedCustomer(urban);
+    //     // Report Urban 
+    //     writeUrbanActiveCustomer(urban);
+    //     writeUrbanSubscribedCustomer(urban);
 
-        // Report Singray
-        writeStingrayReport([...oldPackaging, ...newPackaging]);
+    //     // Report Singray
+    //     writeStingrayReport([...oldPackaging, ...newPackaging]);
 
-        // Report SingrayCo
-        writeStingrayReportCo([...oldPackaging, ...newPackaging]);
+    //     // Report SingrayCo
+    //     writeStingrayReportCo([...oldPackaging, ...newPackaging]);
 
-        // Report Yplay colombia
-        writeToYplayColombia([...newPackaging, ...oldPackaging]);
+    //     // Report Yplay colombia
+    //     writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
-        // Report Astarte
-        writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
+    //     // Report Astarte
+    //     writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
 
-        // Report Simba
-        writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+    //     // Report Simba
+    //     writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
-        // Report CNN / FISH
-        writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+    //     // Report CNN / FISH
+    //     writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
-        // Send email
-        sendEmail(FILENAMES).catch(e => console.log(e));
-    } catch (error) {
-        console.log(error);
-    }
+    //     // Send email
+    //     sendEmail(FILENAMES).catch(e => console.log(e));
+    // } catch (error) {
+    //     console.log(error);
+    // }
 }
 
 function writeStingrayReport(data) {

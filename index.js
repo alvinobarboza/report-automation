@@ -105,15 +105,7 @@ Promise.all([
     ] = result;
 
     const telemedicinaValidatedData = validateTelemedicinaData(telemedicinaActive.rows, telemedicinaSubscribed.response.rows);
-
-    let i = 0;
-    for (const key in telemedicinaValidatedData) {
-        if(telemedicinaValidatedData[key].products.length > 1){
-            ++i;
-            console.log(i);
-        }
-    }
-
+    writeFile(telemedicinaValidatedData);
     // const groupedData = groupByDealerByCustomer(customers.response.rows);
     // const validatedUrban = validationUrban(urban.response.rows);
     // const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
