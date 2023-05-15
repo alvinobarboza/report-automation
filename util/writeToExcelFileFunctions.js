@@ -1,7 +1,6 @@
 const excel = require('excel4node');
-const { BASIC, COMPACT, FULL, PREMIUM, URBANTV, ERROR, START, ADULTO } = require('./constants');
+const { BASIC, COMPACT, FULL, PREMIUM, START, ADULTO } = require('./constants');
 const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange, getCurrentDate } = require('./dateManipulation');
-const { groupByGeneric } = require('./groupByFunctions');
 const { validateYplayExceptions, dealerValidation, validateYplayComlombia, validateLoginTest } = require('./packageValidationFunctions');
 const {
     headerStyle,
@@ -20,65 +19,66 @@ const writePdfFile = require('./writePdfFile');
 const sendEmail = require('./email/mailSender');
 const path = require('path');
 const fs = require('fs');
-const { setDefaultResultOrder, FILE } = require('dns');
 const { writeTelemdicinaReport } = require('./writeTelemedicinaReport');
 
 const FILENAMES = [];
 const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
 
 function writeFile(
-    // raw,
-    // oldPackaging,
-    // newPackaging,
-    // dealers,
-    // urban,
-    // urbanData,
+    raw,
+    oldPackaging,
+    newPackaging,
+    dealers,
+    urban,
+    urbanData,
     telemedicinaData
     ) {
+    try {
         createFolderForFile();
+        saveRawData(
+            raw,
+            oldPackaging,
+            newPackaging,
+            dealers,
+            urbanData,
+            telemedicinaData
+        );
+        
+        // Telemedicina
         writeTelemdicinaReport(telemedicinaData, getPath, insertFilenameToFilenames);
-        console.log(FILENAMES);
-    // try {
-    //     createFolderForFile();
-    //     saveRawData(
-    //         raw,
-    //         oldPackaging,
-    //         newPackaging,
-    //         dealers,
-    //         urbanData
-    //     );
 
-    //     writeBrandReportOld(oldPackaging);
-    //     writeBrandReportNew(newPackaging);
-    //     writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
-    //     // Report Urban 
-    //     writeUrbanActiveCustomer(urban);
-    //     writeUrbanSubscribedCustomer(urban);
+        writeBrandReportOld(oldPackaging);
+        writeBrandReportNew(newPackaging);
+        writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
-    //     // Report Singray
-    //     writeStingrayReport([...oldPackaging, ...newPackaging]);
+        // Report Urban 
+        writeUrbanActiveCustomer(urban);
+        writeUrbanSubscribedCustomer(urban);
 
-    //     // Report SingrayCo
-    //     writeStingrayReportCo([...oldPackaging, ...newPackaging]);
+        // Report Singray
+        writeStingrayReport([...oldPackaging, ...newPackaging]);
 
-    //     // Report Yplay colombia
-    //     writeToYplayColombia([...newPackaging, ...oldPackaging]);
+        // Report SingrayCo
+        writeStingrayReportCo([...oldPackaging, ...newPackaging]);
 
-    //     // Report Astarte
-    //     writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
+        // Report Yplay colombia
+        writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
-    //     // Report Simba
-    //     writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
+        // Report Astarte
+        writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
 
-    //     // Report CNN / FISH
-    //     writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+        // Report Simba
+        writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
 
-    //     // Send email
-    //     sendEmail(FILENAMES).catch(e => console.log(e));
-    // } catch (error) {
-    //     console.log(error);
-    // }
+        // Report CNN / FISH
+        writeProgramadorasReportGeneric(oldPackaging, newPackaging);
+
+        // Send email
+        sendEmail(FILENAMES).catch(e => console.log(e));
+    } catch (error) {
+        console.log(error);
+    }
 }
 
 function writeStingrayReport(data) {
@@ -293,7 +293,7 @@ function createFolderForFile() {
     }
 }
 
-function saveRawData(raw, old, neW, dealers, urbanData) {
+function saveRawData(raw, old, neW, dealers, urbanData, telemedicina) {
     fs.writeFileSync(
         getPath(`raw_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
         JSON.stringify(raw, null, 2),
@@ -317,6 +317,11 @@ function saveRawData(raw, old, neW, dealers, urbanData) {
     fs.writeFileSync(
         getPath(`urbanData_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
         JSON.stringify(urbanData, null, 2),
+        'utf-8'
+    );
+    fs.writeFileSync(
+        getPath(`telemedicina_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        JSON.stringify(telemedicina, null, 2),
         'utf-8'
     );
 }

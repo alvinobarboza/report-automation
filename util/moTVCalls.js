@@ -13,7 +13,7 @@ const getReport = async (url, body, header) => {
         }
         return data;
     } catch (error) {
-        console.log(error.message);
+        console.log(error);
         return 0;
     }
 }

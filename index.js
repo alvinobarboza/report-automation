@@ -86,37 +86,36 @@ const getDealersData = () => getReport(
 // main();
 
 Promise.all([
-    // getCustomersData(),
-    // getDealersData(),
-    // getActiveCustomers(),
-    // getUrbanReports(),
+    getCustomersData(),
+    getDealersData(),
+    getActiveCustomers(),
+    getUrbanReports(),
     telemedicina,
     getTelemedicinaData()
 ]).then(async (result) => {
-    // const [
-        //     customers,
-        //     dealers,
-        //     activeCustomers,
-        //     urban
-        // ] = result;
     const [
-        telemedicinaActive,
-        telemedicinaSubscribed
+            customers,
+            dealers,
+            activeCustomers,
+            urban,
+            telemedicinaActive,
+            telemedicinaSubscribed
     ] = result;
 
     const telemedicinaValidatedData = validateTelemedicinaData(telemedicinaActive.rows, telemedicinaSubscribed.response.rows);
     writeFile(telemedicinaValidatedData);
-    // const groupedData = groupByDealerByCustomer(customers.response.rows);
-    // const validatedUrban = validationUrban(urban.response.rows);
-    // const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
-    // writeFile(
-    //     customers.response.rows,
-    //     oldPackaging,
-    //     newPackaging,
-    //     dealers.response.rows,
-    //     validatedUrban,
-    //     urban.response.rows
-    // );
+    const groupedData = groupByDealerByCustomer(customers.response.rows);
+    const validatedUrban = validationUrban(urban.response.rows);
+    const { newPackaging, oldPackaging } = await validation(groupedData, activeCustomers.response.rows, dealers.response.rows);
+    console.log(oldPackaging);
+    writeFile(
+        customers.response.rows,
+        oldPackaging,
+        newPackaging,
+        dealers.response.rows,
+        validatedUrban,
+        urban.response.rows
+    );
 }).catch((err) => {
-    console.table(err);
+    console.log(err);
 });

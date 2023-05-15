@@ -10,7 +10,7 @@ const writeTelemdicinaReport = (dataTuple, getPath, insertFilenameToFilenames) =
     
     try {
         //console.log(array.dealer);
-        const MAIN_HEADER =  'TELEMDICINA';
+        const MAIN_HEADER =  'TELEMEDICINA';
         const MAIN_HEADER_ROWS_COUNT = 8;
         const SECONDARY_HEADER = ['Empresas', 'QTD Cadastrados', 'QTD Ativos'];
         const headerSheetAllcustomers = ['Empresa', 'Cliente', 'Pacote', 'Data Ativação',];
