@@ -20,18 +20,19 @@ const sendEmail = require('./email/mailSender');
 const path = require('path');
 const fs = require('fs');
 const { writeTelemdicinaReport } = require('./writeTelemedicinaReport');
+const { accessLog } = require('./logs');
 
 const FILENAMES = [];
 const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
 
 function writeFile(
-    raw,
-    oldPackaging,
-    newPackaging,
-    dealers,
-    urban,
-    urbanData,
-    telemedicinaData
+        raw,
+        oldPackaging,
+        newPackaging,
+        dealers,
+        urban,
+        urbanData,
+        telemedicinaData
     ) {
     try {
         createFolderForFile();
@@ -77,6 +78,7 @@ function writeFile(
         // Send email
         sendEmail(FILENAMES).catch(e => console.log(e));
     } catch (error) {
+        accessLog(error.stack);
         console.log(error);
     }
 }
