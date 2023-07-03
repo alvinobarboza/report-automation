@@ -1,7 +1,18 @@
 const excel = require('excel4node');
 const { BASIC, COMPACT, FULL, PREMIUM, START, ADULTO } = require('./constants');
-const { getCurrentMonth, getCurrentYear, getCurrentMonthYearShort, getDateRange, getCurrentDate } = require('./dateManipulation');
-const { validateYplayExceptions, dealerValidation, validateYplayComlombia, validateLoginTest } = require('./packageValidationFunctions');
+const {
+    getCurrentMonth,
+    getCurrentYear,
+    getCurrentMonthYearShort,
+    getDateRange,
+    getCurrentDate,
+} = require('./dateManipulation');
+const {
+    validateYplayExceptions,
+    dealerValidation,
+    validateYplayComlombia,
+    validateLoginTest,
+} = require('./packageValidationFunctions');
 const {
     headerStyle,
     dataStyle,
@@ -13,47 +24,51 @@ const {
     dataStyleException3,
     dataStyleSimba,
     headerStyleSimba,
-    dataStyleSimbaProviders
+    dataStyleSimbaProviders,
 } = require('./stylesExcelFile');
 const writePdfFile = require('./writePdfFile');
 const sendEmail = require('./email/mailSender');
 const path = require('path');
 const fs = require('fs');
-const { writeTelemdicinaReport } = require('./writeTelemedicinaReport');
+const { writeSvaReport } = require('./writeSvaReport');
 const { accessLog } = require('./logs');
 
 const FILENAMES = [];
-const PATHTOFOLDER = path.join(__dirname, '..', 'out', `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`);
+const PATHTOFOLDER = path.join(
+    __dirname,
+    '..',
+    'out',
+    `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`
+);
 
 function writeFile(
-        raw,
-        oldPackaging,
-        newPackaging,
-        dealers,
-        urban,
-        urbanData,
-        telemedicinaData
-    ) {
+    raw,
+    oldPackaging,
+    newPackaging,
+    dealers,
+    urban,
+    urbanData,
+    svas
+) {
     try {
         createFolderForFile();
-        saveRawData(
-            raw,
-            oldPackaging,
-            newPackaging,
-            dealers,
-            urbanData,
-            telemedicinaData
-        );
-        
-        // Telemedicina
-        writeTelemdicinaReport(telemedicinaData, getPath, insertFilenameToFilenames);
+        saveRawData(raw, oldPackaging, newPackaging, dealers, urbanData, svas);
 
+        // SVAs
+        for (const sva of svas) {
+            writeSvaReport(
+                sva.data,
+                getPath,
+                insertFilenameToFilenames,
+                sva.sva
+            );
+        }
 
         writeBrandReportOld(oldPackaging);
         writeBrandReportNew(newPackaging);
         writeToExeptionReport([...newPackaging, ...oldPackaging]);
 
-        // Report Urban 
+        // Report Urban
         writeUrbanActiveCustomer(urban);
         writeUrbanSubscribedCustomer(urban);
 
@@ -67,7 +82,12 @@ function writeFile(
         writeToYplayColombia([...newPackaging, ...oldPackaging]);
 
         // Report Astarte
-        writePdfFile(oldPackaging, newPackaging, insertFilenameToFilenames, getPath);
+        writePdfFile(
+            oldPackaging,
+            newPackaging,
+            insertFilenameToFilenames,
+            getPath
+        );
 
         // Report Simba
         writeProgramadorasReportSimba(oldPackaging, newPackaging, dealers);
@@ -75,8 +95,8 @@ function writeFile(
         // Report CNN / FISH
         writeProgramadorasReportGeneric(oldPackaging, newPackaging);
 
-        // Send email
-        sendEmail(FILENAMES).catch(e => console.log(e));
+        // // Send email
+        sendEmail(FILENAMES).catch((e) => console.log(e));
     } catch (error) {
         accessLog(error.stack);
         console.log(error);
@@ -84,13 +104,17 @@ function writeFile(
 }
 
 function writeStingrayReport(data) {
-
     try {
         let MAIN_HEADER_ROWS_COUNT = 6; // Will be incremented every line
         const MAIN_HEADER = 'YPLAY';
         const SECOND_HEADER = 'STINGRAY';
         const TABLE_HEADER = ['Empresa', 'Total'];
-        const HEADER_CUSTOMERS = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
+        const HEADER_CUSTOMERS = [
+            'Brand',
+            'Customer',
+            'Pacote',
+            'Data Ativação',
+        ];
 
         const workBook = new excel.Workbook();
 
@@ -102,14 +126,29 @@ function writeStingrayReport(data) {
         workSheetResult.column(2).setWidth(10);
 
         //Get total customers
-        const totalStringray = data.reduce((acc, dealer) => acc + dealer?.countStingray, 0);
+        const totalStringray = data.reduce(
+            (acc, dealer) => acc + dealer?.countStingray,
+            0
+        );
 
-        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAIN_HEADER)
+            .style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
-        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
+        workSheetResult
+            .cell(3, 2)
+            .string(getCurrentMonthYearShort())
+            .style(dataStyleException2);
 
-        workSheetResult.cell(5, 1).string('Assinantes ativos Stingray').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(totalStringray).style(dataStyleException2);
+        workSheetResult
+            .cell(5, 1)
+            .string('Assinantes ativos Stingray')
+            .style(dataStyleException1);
+        workSheetResult
+            .cell(5, 2)
+            .number(totalStringray)
+            .style(dataStyleException2);
 
         //Set row height between first and second table
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
@@ -174,24 +213,28 @@ function writeStingrayReport(data) {
         //     }
         // }
         //----------------------------------------------------------------
-        const filename = getPath(`RELATORIO DE ASSINANTES - STINGRAY - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        insertFilenameToFilenames(filename)
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES - STINGRAY - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        insertFilenameToFilenames(filename);
         workBook.write(filename);
-
     } catch (error) {
         console.log(error);
     }
-
 }
 
 function writeStingrayReportCo(data) {
-
     try {
         let MAIN_HEADER_ROWS_COUNT = 6; // Will be incremented every line
         const MAIN_HEADER = 'YPLAY COLOMBIA';
         const SECOND_HEADER = 'STINGRAY CO';
         const TABLE_HEADER = ['Empresa', 'Total'];
-        const HEADER_CUSTOMERS = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
+        const HEADER_CUSTOMERS = [
+            'Brand',
+            'Customer',
+            'Pacote',
+            'Data Ativação',
+        ];
 
         const workBook = new excel.Workbook();
 
@@ -203,14 +246,29 @@ function writeStingrayReportCo(data) {
         workSheetResult.column(2).setWidth(10);
 
         //Get total customers
-        const totalStringrayCo = data.reduce((acc, dealer) => acc + dealer?.countStingrayCo, 0);
+        const totalStringrayCo = data.reduce(
+            (acc, dealer) => acc + dealer?.countStingrayCo,
+            0
+        );
 
-        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAIN_HEADER)
+            .style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
-        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
+        workSheetResult
+            .cell(3, 2)
+            .string(getCurrentMonthYearShort())
+            .style(dataStyleException2);
 
-        workSheetResult.cell(5, 1).string('Assinantes ativos Stingray Co').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(totalStringrayCo).style(dataStyleException2);
+        workSheetResult
+            .cell(5, 1)
+            .string('Assinantes ativos Stingray Co')
+            .style(dataStyleException1);
+        workSheetResult
+            .cell(5, 2)
+            .number(totalStringrayCo)
+            .style(dataStyleException2);
 
         //Set row height between first and second table
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
@@ -275,14 +333,14 @@ function writeStingrayReportCo(data) {
         //     }
         // }
         //----------------------------------------------------------------
-        const filename = getPath(`RELATORIO DE ASSINANTES - STINGRAY CO - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        insertFilenameToFilenames(filename)
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES - STINGRAY CO - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        insertFilenameToFilenames(filename);
         workBook.write(filename);
-
     } catch (error) {
         console.log(error);
     }
-
 }
 
 function createFolderForFile() {
@@ -295,37 +353,44 @@ function createFolderForFile() {
     }
 }
 
-function saveRawData(raw, old, neW, dealers, urbanData, telemedicina) {
+function getDate() {
+    return `${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}`;
+}
+
+function saveRawData(raw, old, neW, dealers, urbanData, svas) {
     fs.writeFileSync(
-        getPath(`raw_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        getPath(`raw_${getDate()}.json`),
         JSON.stringify(raw, null, 2),
         'utf-8'
     );
     fs.writeFileSync(
-        getPath(`old_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        getPath(`old_${getDate()}.json`),
         JSON.stringify(old, null, 2),
         'utf-8'
     );
     fs.writeFileSync(
-        getPath(`new_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        getPath(`new_${getDate()}.json`),
         JSON.stringify(neW, null, 2),
         'utf-8'
     );
     fs.writeFileSync(
-        getPath(`dealers_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        getPath(`dealers_${getDate()}.json`),
         JSON.stringify(dealers, null, 2),
         'utf-8'
     );
     fs.writeFileSync(
-        getPath(`urbanData_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
+        getPath(`urbanData_${getDate()}.json`),
         JSON.stringify(urbanData, null, 2),
         'utf-8'
     );
-    fs.writeFileSync(
-        getPath(`telemedicina_${getCurrentMonth()}${getCurrentYear()}_${getCurrentDate()}.json`),
-        JSON.stringify(telemedicina, null, 2),
-        'utf-8'
-    );
+
+    for (const sva of svas) {
+        fs.writeFileSync(
+            getPath(`${sva.sva}_${getDate()}.json`),
+            JSON.stringify(sva.data, null, 2),
+            'utf-8'
+        );
+    }
 }
 
 function getPath(filename) {
@@ -343,26 +408,45 @@ const writeToYplayColombia = (data) => {
     const validatedData = validateYplayComlombia(data);
     // console.log(JSON.stringify(validatedData));
     writeToYplayColombiaReport(validatedData);
-}
+};
 
 const writeBrandReportOld = (data) => {
     try {
-        const headerSheetResult = ['Brand', BASIC, COMPACT, FULL, PREMIUM, 'Pacotização errada', 'Usuário teste', 'Total Clientes ativos'];
-        const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
-        const headerSheetAllcustomersValidation = ['Dealer', 'Customer', 'Pacote', 'Status',];
+        const headerSheetResult = [
+            'Brand',
+            BASIC,
+            COMPACT,
+            FULL,
+            PREMIUM,
+            'Pacotização errada',
+            'Usuário teste',
+            'Total Clientes ativos',
+        ];
+        const headerSheetAllcustomers = [
+            'Brand',
+            'Customer',
+            'Pacote',
+            'Data Ativação',
+        ];
+        const headerSheetAllcustomersValidation = [
+            'Dealer',
+            'Customer',
+            'Pacote',
+            'Status',
+        ];
 
         const workbook = new excel.Workbook({
             defaultFont: {
                 color: '#000000',
-                size: 12
+                size: 12,
             },
             dateFormat: 'dd/mm/yyyy hh:mm:ss',
         });
 
         const worksheetResult = workbook.addWorksheet('Resultado', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetResult.column(2).setWidth(27);
         worksheetResult.column(3).setWidth(20);
@@ -376,8 +460,8 @@ const writeBrandReportOld = (data) => {
 
         const worksheetAllCustomers = workbook.addWorksheet('TodosClientes', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetAllCustomers.column(2).setWidth(25);
         worksheetAllCustomers.column(3).setWidth(40);
@@ -385,11 +469,14 @@ const writeBrandReportOld = (data) => {
         worksheetAllCustomers.column(5).setWidth(20);
         worksheetAllCustomers.row(2).filter();
 
-        const worksheetAllCustomersValidation = workbook.addWorksheet('TodosClientesValidacao', {
-            sheetView: {
-                showGridLines: false
+        const worksheetAllCustomersValidation = workbook.addWorksheet(
+            'TodosClientesValidacao',
+            {
+                sheetView: {
+                    showGridLines: false,
+                },
             }
-        });
+        );
         worksheetAllCustomersValidation.row(2).filter();
         worksheetAllCustomersValidation.column(2).setWidth(25);
         worksheetAllCustomersValidation.column(3).setWidth(40);
@@ -397,15 +484,24 @@ const writeBrandReportOld = (data) => {
         worksheetAllCustomersValidation.column(5).setWidth(20);
 
         for (let i = 0; i < headerSheetResult.length; i++) {
-            worksheetResult.cell(2, (i + 2)).string(headerSheetResult[i]).style(headerStyle);
+            worksheetResult
+                .cell(2, i + 2)
+                .string(headerSheetResult[i])
+                .style(headerStyle);
         }
 
         for (let i = 0; i < headerSheetAllcustomers.length; i++) {
-            worksheetAllCustomers.cell(2, (i + 2)).string(headerSheetAllcustomers[i]).style(headerStyle);
+            worksheetAllCustomers
+                .cell(2, i + 2)
+                .string(headerSheetAllcustomers[i])
+                .style(headerStyle);
         }
 
         for (let i = 0; i < headerSheetAllcustomersValidation.length; i++) {
-            worksheetAllCustomersValidation.cell(2, (i + 2)).string(headerSheetAllcustomersValidation[i]).style(headerStyle);
+            worksheetAllCustomersValidation
+                .cell(2, i + 2)
+                .string(headerSheetAllcustomersValidation[i])
+                .style(headerStyle);
         }
 
         let rowCounter = 0;
@@ -418,36 +514,57 @@ const writeBrandReportOld = (data) => {
                 for (let y = 0; y < columns.length; y++) {
                     switch (columns[y]) {
                         case 'dealer':
-                            worksheetResult.cell((rowCounter + 3), 2).string(data[i][columns[y]].toUpperCase()).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 2)
+                                .string(data[i][columns[y]].toUpperCase())
+                                .style(dataStyle);
                             columnCount++;
                             break;
                         case 'basicCount':
-                            worksheetResult.cell((rowCounter + 3), 3).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 3)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'compactCount':
-                            worksheetResult.cell((rowCounter + 3), 4).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 4)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'fullCount':
-                            worksheetResult.cell((rowCounter + 3), 5).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 5)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'premiumCount':
-                            worksheetResult.cell((rowCounter + 3), 6).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 6)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'error':
-                            worksheetResult.cell((rowCounter + 3), 7).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 7)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'test':
-                            worksheetResult.cell((rowCounter + 3), 8).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 8)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
@@ -455,21 +572,46 @@ const writeBrandReportOld = (data) => {
                             break;
                     }
                     if (columnCount === 7) {
-                        worksheetResult.cell((rowCounter + 3), 9).number(tempCustomerCounter).style(dataStyle);
+                        worksheetResult
+                            .cell(rowCounter + 3, 9)
+                            .number(tempCustomerCounter)
+                            .style(dataStyle);
                     }
                 }
                 //Validation sheet
                 for (let y = 0; y < data[i].customers.length; y++) {
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 2)
-                        .string(data[i].dealer).style(dataStyle);
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 3)
-                        .string(data[i].customers[y].login).style(dataStyle);
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 4)
-                        .string(data[i].customers[y].pacoteYplay ? data[i].customers[y].pacoteYplay : 'UserTest')
-                        .style(data[i].customers[y].pacoteYplayStatus === 'ERRO' ? dataStyleError : dataStyleOK);
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 5)
-                        .string(data[i].customers[y].pacoteYplayStatus ? data[i].customers[y].pacoteYplayStatus : 'UserTest')
-                        .style(data[i].customers[y].pacoteYplayStatus === 'ERRO' ? dataStyleError : dataStyleOK);
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 2)
+                        .string(data[i].dealer)
+                        .style(dataStyle);
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 3)
+                        .string(data[i].customers[y].login)
+                        .style(dataStyle);
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 4)
+                        .string(
+                            data[i].customers[y].pacoteYplay
+                                ? data[i].customers[y].pacoteYplay
+                                : 'UserTest'
+                        )
+                        .style(
+                            data[i].customers[y].pacoteYplayStatus === 'ERRO'
+                                ? dataStyleError
+                                : dataStyleOK
+                        );
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 5)
+                        .string(
+                            data[i].customers[y].pacoteYplayStatus
+                                ? data[i].customers[y].pacoteYplayStatus
+                                : 'UserTest'
+                        )
+                        .style(
+                            data[i].customers[y].pacoteYplayStatus === 'ERRO'
+                                ? dataStyleError
+                                : dataStyleOK
+                        );
                     rowCustomersCounter++;
                 }
                 //Validation sheet end
@@ -481,40 +623,72 @@ const writeBrandReportOld = (data) => {
         for (let i = 0; i < data.length; i++) {
             for (let y = 0; y < data[i].customers.length; y++) {
                 for (let z = 0; z < data[i].customers[y].products.length; z++) {
-                    worksheetAllCustomers.cell((rowIndex + 3), 2).string(data[i].dealer).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 3).string(data[i].customers[y].products[z].login).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 4).string(data[i].customers[y].products[z].product).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 5).date(data[i].customers[y].products[z].activation).style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 2)
+                        .string(data[i].dealer)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 3)
+                        .string(data[i].customers[y].products[z].login)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 4)
+                        .string(data[i].customers[y].products[z].product)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 5)
+                        .date(data[i].customers[y].products[z].activation)
+                        .style(dataStyle);
                     rowIndex++;
                 }
             }
         }
-        const filename = getPath(`Relatório de Licenças Ativas (Antiga Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename = getPath(
+            `Relatório de Licenças Ativas (Antiga Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
         insertFilenameToFilenames(filename);
         workbook.write(filename);
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeBrandReportNew = (data) => {
     try {
-        const headerSheetResult = ['Brand', 'CNPJ', START, PREMIUM, 'Usuário teste', ADULTO + '*', 'Total Clientes ativos'];
-        const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
-        const headerSheetAllcustomersValidation = ['Dealer', 'Customer', 'Pacote', 'Status',];
+        const headerSheetResult = [
+            'Brand',
+            'CNPJ',
+            START,
+            PREMIUM,
+            'Usuário teste',
+            ADULTO + '*',
+            'Total Clientes ativos',
+        ];
+        const headerSheetAllcustomers = [
+            'Brand',
+            'Customer',
+            'Pacote',
+            'Data Ativação',
+        ];
+        const headerSheetAllcustomersValidation = [
+            'Dealer',
+            'Customer',
+            'Pacote',
+            'Status',
+        ];
 
         const workbook = new excel.Workbook({
             defaultFont: {
                 color: '#000000',
-                size: 12
+                size: 12,
             },
             dateFormat: 'dd/mm/yyyy hh:mm:ss',
         });
 
         const worksheetResult = workbook.addWorksheet('Resultado', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetResult.column(2).setWidth(27);
         worksheetResult.column(3).setWidth(20);
@@ -527,8 +701,8 @@ const writeBrandReportNew = (data) => {
 
         const worksheetAllCustomers = workbook.addWorksheet('TodosClientes', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetAllCustomers.column(2).setWidth(25);
         worksheetAllCustomers.column(3).setWidth(40);
@@ -536,11 +710,14 @@ const writeBrandReportNew = (data) => {
         worksheetAllCustomers.column(5).setWidth(20);
         worksheetAllCustomers.row(2).filter();
 
-        const worksheetAllCustomersValidation = workbook.addWorksheet('TodosClientesValidacao', {
-            sheetView: {
-                showGridLines: false
+        const worksheetAllCustomersValidation = workbook.addWorksheet(
+            'TodosClientesValidacao',
+            {
+                sheetView: {
+                    showGridLines: false,
+                },
             }
-        });
+        );
         worksheetAllCustomersValidation.row(2).filter();
         worksheetAllCustomersValidation.column(2).setWidth(25);
         worksheetAllCustomersValidation.column(3).setWidth(40);
@@ -548,15 +725,24 @@ const writeBrandReportNew = (data) => {
         worksheetAllCustomersValidation.column(5).setWidth(20);
 
         for (let i = 0; i < headerSheetResult.length; i++) {
-            worksheetResult.cell(2, (i + 2)).string(headerSheetResult[i]).style(headerStyle);
+            worksheetResult
+                .cell(2, i + 2)
+                .string(headerSheetResult[i])
+                .style(headerStyle);
         }
 
         for (let i = 0; i < headerSheetAllcustomers.length; i++) {
-            worksheetAllCustomers.cell(2, (i + 2)).string(headerSheetAllcustomers[i]).style(headerStyle);
+            worksheetAllCustomers
+                .cell(2, i + 2)
+                .string(headerSheetAllcustomers[i])
+                .style(headerStyle);
         }
 
         for (let i = 0; i < headerSheetAllcustomersValidation.length; i++) {
-            worksheetAllCustomersValidation.cell(2, (i + 2)).string(headerSheetAllcustomersValidation[i]).style(headerStyle);
+            worksheetAllCustomersValidation
+                .cell(2, i + 2)
+                .string(headerSheetAllcustomersValidation[i])
+                .style(headerStyle);
         }
 
         let rowCounter = 0;
@@ -569,51 +755,94 @@ const writeBrandReportNew = (data) => {
                 for (let y = 0; y < columns.length; y++) {
                     switch (columns[y]) {
                         case 'dealer':
-                            worksheetResult.cell((rowCounter + 3), 2).string(data[i][columns[y]]?.toUpperCase()).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 2)
+                                .string(data[i][columns[y]]?.toUpperCase())
+                                .style(dataStyle);
                             columnCount++;
                             break;
                         case 'cnpj':
-                            worksheetResult.cell((rowCounter + 3), 3).string(data[i][columns[y]]?.toUpperCase()).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 3)
+                                .string(data[i][columns[y]]?.toUpperCase())
+                                .style(dataStyle);
                             columnCount++;
                             break;
                         case 'startCount':
-                            worksheetResult.cell((rowCounter + 3), 4).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 4)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'premiumCount':
-                            worksheetResult.cell((rowCounter + 3), 5).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 5)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'test':
-                            worksheetResult.cell((rowCounter + 3), 6).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 6)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             tempCustomerCounter += data[i][columns[y]];
                             columnCount++;
                             break;
                         case 'adultoCount':
-                            worksheetResult.cell((rowCounter + 3), 7).number(data[i][columns[y]]).style(dataStyle);
+                            worksheetResult
+                                .cell(rowCounter + 3, 7)
+                                .number(data[i][columns[y]])
+                                .style(dataStyle);
                             columnCount++;
                             break;
                         default:
                             break;
                     }
                     if (columnCount === 6) {
-                        worksheetResult.cell((rowCounter + 3), 8).number(tempCustomerCounter).style(dataStyle);
+                        worksheetResult
+                            .cell(rowCounter + 3, 8)
+                            .number(tempCustomerCounter)
+                            .style(dataStyle);
                     }
                 }
                 //Validation sheet
                 for (let y = 0; y < data[i].customers.length; y++) {
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 2)
-                        .string(data[i].dealer).style(dataStyle);
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 3)
-                        .string(data[i].customers[y].login).style(dataStyle);
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 4)
-                        .string(data[i].customers[y].pacoteYplay ? data[i].customers[y].pacoteYplay : 'UserTest')
-                        .style(data[i].customers[y].pacoteYplayStatus === 'ERRO' ? dataStyleError : dataStyleOK);
-                    worksheetAllCustomersValidation.cell((rowCustomersCounter + 3), 5)
-                        .string(data[i].customers[y].pacoteYplayStatus ? data[i].customers[y].pacoteYplayStatus : 'UserTest')
-                        .style(data[i].customers[y].pacoteYplayStatus === 'ERRO' ? dataStyleError : dataStyleOK);
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 2)
+                        .string(data[i].dealer)
+                        .style(dataStyle);
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 3)
+                        .string(data[i].customers[y].login)
+                        .style(dataStyle);
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 4)
+                        .string(
+                            data[i].customers[y].pacoteYplay
+                                ? data[i].customers[y].pacoteYplay
+                                : 'UserTest'
+                        )
+                        .style(
+                            data[i].customers[y].pacoteYplayStatus === 'ERRO'
+                                ? dataStyleError
+                                : dataStyleOK
+                        );
+                    worksheetAllCustomersValidation
+                        .cell(rowCustomersCounter + 3, 5)
+                        .string(
+                            data[i].customers[y].pacoteYplayStatus
+                                ? data[i].customers[y].pacoteYplayStatus
+                                : 'UserTest'
+                        )
+                        .style(
+                            data[i].customers[y].pacoteYplayStatus === 'ERRO'
+                                ? dataStyleError
+                                : dataStyleOK
+                        );
                     rowCustomersCounter++;
                 }
                 //Validation sheet end
@@ -625,21 +854,35 @@ const writeBrandReportNew = (data) => {
         for (let i = 0; i < data.length; i++) {
             for (let y = 0; y < data[i].customers.length; y++) {
                 for (let z = 0; z < data[i].customers[y].products.length; z++) {
-                    worksheetAllCustomers.cell((rowIndex + 3), 2).string(data[i].dealer).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 3).string(data[i].customers[y].products[z].login).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 4).string(data[i].customers[y].products[z].product).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 5).date(data[i].customers[y].products[z].activation).style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 2)
+                        .string(data[i].dealer)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 3)
+                        .string(data[i].customers[y].products[z].login)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 4)
+                        .string(data[i].customers[y].products[z].product)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 5)
+                        .date(data[i].customers[y].products[z].activation)
+                        .style(dataStyle);
                     rowIndex++;
                 }
             }
         }
-        const filename = getPath(`Relatório de Licenças Ativas (Nova Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`)
+        const filename = getPath(
+            `Relatório de Licenças Ativas (Nova Pacotização) - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
         insertFilenameToFilenames(filename);
         workbook.write(filename);
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeProgramadorasReportSimba = (old, neW, dealers) => {
     try {
@@ -660,28 +903,29 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
             'NUMERO DE ASSINANTES',
             'VALOR UNITARIO POR ASSINANTES',
             'MÍNIMO GARANTIDO',
-            'VALOR EM REAIS TOTAL A SER FATURADO (MG)'
+            'VALOR EM REAIS TOTAL A SER FATURADO (MG)',
         ];
         const constantValuesProvidersSheetHeader = [
             'Provedor (nome fantasia)',
             'Razão social',
             'CNPJ',
             'Cidade/Estado',
-            'Número de assinantes'
+            'Número de assinantes',
         ];
-        const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
+        const MAINHEADER =
+            'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
 
         const workbook = new excel.Workbook({
             defaultFont: {
                 color: '#000000',
-                size: 12
+                size: 12,
             },
         });
 
         const worksheetResult = workbook.addWorksheet('Operadora', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetResult.row(1).setHeight(25);
         worksheetResult.column(1).setWidth(45);
@@ -689,8 +933,8 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
 
         const worksheetProviders = workbook.addWorksheet('Provedores', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetProviders.row(1).setHeight(25);
         worksheetProviders.row(1).filter();
@@ -700,117 +944,145 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
         worksheetProviders.column(4).setWidth(30);
         worksheetProviders.column(5).setWidth(30);
 
-        worksheetResult.cell(1, 1, 1, 2, true).string(MAINHEADER).style({
-            ...headerStyleSimba,
-            fill: {
-                type: 'pattern',
-                patternType: 'solid',
-                bgColor: '#ffff00',
-                fgColor: '#ffff00',
-            }
-        });
+        worksheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAINHEADER)
+            .style({
+                ...headerStyleSimba,
+                fill: {
+                    type: 'pattern',
+                    patternType: 'solid',
+                    bgColor: '#ffff00',
+                    fgColor: '#ffff00',
+                },
+            });
         for (let i = 0; i < constantValuesResultSheetHeader.length; i++) {
             switch (i) {
                 case 0:
-                    worksheetResult.cell((i + 2), 1).string(constantValuesResultSheetHeader[i]).style({
-                        ...dataStyleSimba,
-                        alignment: {
-                            horizontal: ['center'],
-                            vertical: ['center']
-                        },
-                        border: {
-                            ...dataStyleSimba.border,
-                            top: {
-                                style: 'medium',
-                                color: '#000000'
+                    worksheetResult
+                        .cell(i + 2, 1)
+                        .string(constantValuesResultSheetHeader[i])
+                        .style({
+                            ...dataStyleSimba,
+                            alignment: {
+                                horizontal: ['center'],
+                                vertical: ['center'],
                             },
-                        }
-                    });
+                            border: {
+                                ...dataStyleSimba.border,
+                                top: {
+                                    style: 'medium',
+                                    color: '#000000',
+                                },
+                            },
+                        });
                     break;
                 case constantValuesResultSheetHeader.length - 1:
-                    worksheetResult.cell((i + 2), 1).string(constantValuesResultSheetHeader[i]).style({
-                        ...dataStyleSimba,
-                        alignment: {
-                            horizontal: ['center'],
-                            vertical: ['center']
-                        },
-                        border: {
-                            ...dataStyleSimba.border,
-                            bottom: {
-                                style: 'medium',
-                                color: '#000000'
+                    worksheetResult
+                        .cell(i + 2, 1)
+                        .string(constantValuesResultSheetHeader[i])
+                        .style({
+                            ...dataStyleSimba,
+                            alignment: {
+                                horizontal: ['center'],
+                                vertical: ['center'],
                             },
-                        }
-                    });
+                            border: {
+                                ...dataStyleSimba.border,
+                                bottom: {
+                                    style: 'medium',
+                                    color: '#000000',
+                                },
+                            },
+                        });
                     break;
                 default:
-                    worksheetResult.cell((i + 2), 1).string(constantValuesResultSheetHeader[i]).style({
-                        ...dataStyleSimba,
-                        alignment: {
-                            horizontal: ['center'],
-                            vertical: ['center']
-                        },
-                    });
+                    worksheetResult
+                        .cell(i + 2, 1)
+                        .string(constantValuesResultSheetHeader[i])
+                        .style({
+                            ...dataStyleSimba,
+                            alignment: {
+                                horizontal: ['center'],
+                                vertical: ['center'],
+                            },
+                        });
                     break;
             }
         }
         for (let i = 0; i < constantValuesProvidersSheetHeader.length; i++) {
-            worksheetProviders.cell(1, (i + 1))
+            worksheetProviders
+                .cell(1, i + 1)
                 .string(constantValuesProvidersSheetHeader[i])
                 .style(headerStyleSimba);
         }
 
-        worksheetResult.cell(2, 2).string(stringDate).style({
-            ...dataStyleSimba,
-            alignment: {
-                horizontal: ['center'],
-                vertical: ['center']
-            },
-            border: {
-                ...dataStyleSimba.border,
-                top: {
-                    style: 'medium',
-                    color: '#000000'
+        worksheetResult
+            .cell(2, 2)
+            .string(stringDate)
+            .style({
+                ...dataStyleSimba,
+                alignment: {
+                    horizontal: ['center'],
+                    vertical: ['center'],
                 },
-            }
-        });
-        worksheetResult.cell(3, 2).number(amount).style({
-            ...dataStyleSimba,
-            alignment: {
-                horizontal: ['center'],
-                vertical: ['center']
-            },
-        });
-        worksheetResult.cell(4, 2).number(1.69).style({
-            ...dataStyleSimba,
-            alignment: {
-                horizontal: ['center'],
-                vertical: ['center']
-            },
-            numberFormat: "R$ #.#0"
-        });
-        worksheetResult.cell(5, 2).string('R$ 0,00').style({
-            ...dataStyleSimba,
-            alignment: {
-                horizontal: ['center'],
-                vertical: ['center']
-            },
-        });
-        worksheetResult.cell(6, 2).number(amount * 1.69).style({
-            ...dataStyleSimba,
-            alignment: {
-                horizontal: ['center'],
-                vertical: ['center']
-            },
-            border: {
-                ...dataStyleSimba.border,
-                bottom: {
-                    style: 'medium',
-                    color: '#000000'
+                border: {
+                    ...dataStyleSimba.border,
+                    top: {
+                        style: 'medium',
+                        color: '#000000',
+                    },
                 },
-            },
-            numberFormat: "R$ #.#0"
-        });
+            });
+        worksheetResult
+            .cell(3, 2)
+            .number(amount)
+            .style({
+                ...dataStyleSimba,
+                alignment: {
+                    horizontal: ['center'],
+                    vertical: ['center'],
+                },
+            });
+        worksheetResult
+            .cell(4, 2)
+            .number(1.69)
+            .style({
+                ...dataStyleSimba,
+                alignment: {
+                    horizontal: ['center'],
+                    vertical: ['center'],
+                },
+                numberFormat: 'R$ #.#0',
+            });
+        worksheetResult
+            .cell(5, 2)
+            .string('R$ 0,00')
+            .style({
+                ...dataStyleSimba,
+                alignment: {
+                    horizontal: ['center'],
+                    vertical: ['center'],
+                },
+            });
+        worksheetResult
+            .cell(6, 2)
+            .number(amount * 1.69)
+            .style({
+                ...dataStyleSimba,
+                alignment: {
+                    horizontal: ['center'],
+                    vertical: ['center'],
+                },
+                border: {
+                    ...dataStyleSimba.border,
+                    bottom: {
+                        style: 'medium',
+                        color: '#000000',
+                    },
+                },
+                numberFormat: 'R$ #.#0',
+            });
 
         //============================================================================
         let rowCounter = 0;
@@ -820,18 +1092,61 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
                 let countCustomers = 0;
                 // check difference between old and new packaging
                 if (typeof oldPlusNew[i].startCount !== 'undefined') {
-                    countCustomers += oldPlusNew[i].startActiveCount + oldPlusNew[i].premiumActiveCount;
+                    countCustomers +=
+                        oldPlusNew[i].startActiveCount +
+                        oldPlusNew[i].premiumActiveCount;
                 } else {
-                    countCustomers += oldPlusNew[i].fullActiveCount + oldPlusNew[i].premiumActiveCount;
+                    countCustomers +=
+                        oldPlusNew[i].fullActiveCount +
+                        oldPlusNew[i].premiumActiveCount;
                 }
                 if (countCustomers) {
                     for (let y = 0; y < dealers.length; y++) {
-                        if (oldPlusNew[i].customers[0].products[0].dealerid === dealers[y].id) {
-                            worksheetProviders.cell((rowCounter + 2), 1).string(dealers[y].nomefantasia === '' ? dealers[y].name.toUpperCase() : dealers[y].nomefantasia.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
-                            worksheetProviders.cell((rowCounter + 2), 2).string(dealers[y].razaosocial.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
-                            worksheetProviders.cell((rowCounter + 2), 3).string(dealers[y].cnpj.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['center'] } });
-                            worksheetProviders.cell((rowCounter + 2), 4).string(`${dealers[y].cidade}/${dealers[y].uf}`.toUpperCase()).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['left'] } });
-                            worksheetProviders.cell((rowCounter + 2), 5).number(countCustomers).style({ ...dataStyleSimbaProviders, alignment: { horizontal: ['center'] } });
+                        if (
+                            oldPlusNew[i].customers[0].products[0].dealerid ===
+                            dealers[y].id
+                        ) {
+                            worksheetProviders
+                                .cell(rowCounter + 2, 1)
+                                .string(
+                                    dealers[y].nomefantasia === ''
+                                        ? dealers[y].name.toUpperCase()
+                                        : dealers[y].nomefantasia.toUpperCase()
+                                )
+                                .style({
+                                    ...dataStyleSimbaProviders,
+                                    alignment: { horizontal: ['left'] },
+                                });
+                            worksheetProviders
+                                .cell(rowCounter + 2, 2)
+                                .string(dealers[y].razaosocial.toUpperCase())
+                                .style({
+                                    ...dataStyleSimbaProviders,
+                                    alignment: { horizontal: ['left'] },
+                                });
+                            worksheetProviders
+                                .cell(rowCounter + 2, 3)
+                                .string(dealers[y].cnpj.toUpperCase())
+                                .style({
+                                    ...dataStyleSimbaProviders,
+                                    alignment: { horizontal: ['center'] },
+                                });
+                            worksheetProviders
+                                .cell(rowCounter + 2, 4)
+                                .string(
+                                    `${dealers[y].cidade}/${dealers[y].uf}`.toUpperCase()
+                                )
+                                .style({
+                                    ...dataStyleSimbaProviders,
+                                    alignment: { horizontal: ['left'] },
+                                });
+                            worksheetProviders
+                                .cell(rowCounter + 2, 5)
+                                .number(countCustomers)
+                                .style({
+                                    ...dataStyleSimbaProviders,
+                                    alignment: { horizontal: ['center'] },
+                                });
                         }
                     }
                     rowCounter++;
@@ -840,13 +1155,15 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
         }
 
         //============================================================================
-        const filename = getPath(`RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES - SIMBA - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
         insertFilenameToFilenames(filename);
         workbook.write(filename);
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeProgramadorasReportGeneric = (old, neW) => {
     try {
@@ -867,54 +1184,73 @@ const writeProgramadorasReportGeneric = (old, neW) => {
             'COMPÊTENCIA',
             'NUMERO DE ASSINANTES',
             'VALOR UNITARIO POR ASSINANTES',
-            'VALOR EM REAIS TOTAL A SER FATURADO (MG)'
+            'VALOR EM REAIS TOTAL A SER FATURADO (MG)',
         ];
         const tableData = [stringDate, amount, 'R$', 'R$'];
-        const MAINHEADER = 'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
+        const MAINHEADER =
+            'OPERADORA: YOU CAST COMERCIO DE EQUIPAMENTOS ELETRONICOS LTDA';
 
         const workbook = new excel.Workbook({
             defaultFont: {
                 color: '#000000',
-                size: 12
+                size: 12,
             },
         });
 
         const worksheetResult = workbook.addWorksheet('Operadora', {
             sheetView: {
-                showGridLines: false
-            }
+                showGridLines: false,
+            },
         });
         worksheetResult.row(1).setHeight(25);
         worksheetResult.column(1).setWidth(45);
         worksheetResult.column(2).setWidth(35);
 
-        worksheetResult.cell(1, 1, 1, 2, true).string(MAINHEADER).style(headerStyle);
+        worksheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAINHEADER)
+            .style(headerStyle);
         for (let i = 0; i < constantValuesResultSheet.length; i++) {
-            worksheetResult.cell((i + 2), 1).string(constantValuesResultSheet[i]).style(dataStyle);
+            worksheetResult
+                .cell(i + 2, 1)
+                .string(constantValuesResultSheet[i])
+                .style(dataStyle);
         }
         for (let i = 0; i < tableData.length; i++) {
             if (typeof tableData[i] === 'number') {
-                worksheetResult.cell((i + 2), 2)
+                worksheetResult
+                    .cell(i + 2, 2)
                     .number(tableData[i])
-                    .style({ ...dataStyle, alignment: { horizontal: ['right'] } })
+                    .style({
+                        ...dataStyle,
+                        alignment: { horizontal: ['right'] },
+                    });
             } else {
-                worksheetResult.cell((i + 2), 2)
+                worksheetResult
+                    .cell(i + 2, 2)
                     .string(tableData[i])
-                    .style({ ...dataStyle, alignment: { horizontal: ['right'] } })
+                    .style({
+                        ...dataStyle,
+                        alignment: { horizontal: ['right'] },
+                    });
             }
         }
         //console.table(dealers);
-        const filename1 = getPath(`RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        const filename2 = getPath(`RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
+        const filename1 = getPath(
+            `RELATORIO DE ASSINANTES - CNN - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        const filename2 = getPath(
+            `RELATORIO DE ASSINANTES - FISH - Ref. ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
         insertFilenameToFilenames(filename1);
-        insertFilenameToFilenames(filename2)
+        insertFilenameToFilenames(filename2);
 
         workbook.write(filename1);
         workbook.write(filename2);
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeUrbanActiveCustomer = (array) => {
     try {
@@ -934,13 +1270,28 @@ const writeUrbanActiveCustomer = (array) => {
         workSheetResult.column(2).setWidth(11);
 
         //Get total customers
-        const totalCustomer = array.reduce((acc, vendor) => acc += vendor.active, 0);
+        const totalCustomer = array.reduce(
+            (acc, vendor) => (acc += vendor.active),
+            0
+        );
 
-        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAIN_HEADER)
+            .style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
-        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
-        workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(totalCustomer).style(dataStyleException2);
+        workSheetResult
+            .cell(3, 2)
+            .string(getCurrentMonthYearShort())
+            .style(dataStyleException2);
+        workSheetResult
+            .cell(5, 1)
+            .string('Assinantes ativos na Plataforma')
+            .style(dataStyleException1);
+        workSheetResult
+            .cell(5, 2)
+            .number(totalCustomer)
+            .style(dataStyleException2);
 
         //Set row height between first and second table
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
@@ -955,14 +1306,23 @@ const writeUrbanActiveCustomer = (array) => {
 
         workSheetResult.row(MAIN_HEADER_ROWS_COUNT).filter(); // Set filter for second table's header
         for (let i = 0; i < SECONDARY_HEADER.length; i++) {
-            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException); // Populate header
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, i + 1)
+                .string(SECONDARY_HEADER[i])
+                .style(headerStyleException); // Populate header
         }
 
         // Dynamicaly populate second table
         for (let i = 0; i < array.length; i++) {
             MAIN_HEADER_ROWS_COUNT++;
-            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array[i]['vendors_name'].toUpperCase()).style(dataStyleException3);
-            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(array[i].active).style(dataStyleException2);
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, 1)
+                .string(array[i]['vendors_name'].toUpperCase())
+                .style(dataStyleException3);
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, 2)
+                .number(array[i].active)
+                .style(dataStyleException2);
 
             if (i + 1 === array.length) {
                 MAIN_HEADER_ROWS_COUNT++;
@@ -970,20 +1330,21 @@ const writeUrbanActiveCustomer = (array) => {
         }
 
         //----------------------------------------------------------------
-        const filename = getPath(`RELATORIO DE ASSINANTES ATIVOS - URBANTV - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        insertFilenameToFilenames(filename)
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES ATIVOS - URBANTV - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        insertFilenameToFilenames(filename);
         workBook.write(filename);
-
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeToExeptionReport = (data) => {
     const validatedData = validateYplayExceptions(data);
     // validatedData.forEach(data => console.log(data));
-    validatedData.forEach(v => writeToExeptionReportGeneric(v));
-}
+    validatedData.forEach((v) => writeToExeptionReportGeneric(v));
+};
 
 const writeToExeptionReportGeneric = (array) => {
     try {
@@ -991,7 +1352,12 @@ const writeToExeptionReportGeneric = (array) => {
         const MAIN_HEADER = array.dealer.toUpperCase();
         const MAIN_HEADER_ROWS_COUNT = 6;
         const SECONDARY_HEADER = ['Pacote', 'QTD'];
-        const headerSheetAllcustomers = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
+        const headerSheetAllcustomers = [
+            'Brand',
+            'Customer',
+            'Pacote',
+            'Data Ativação',
+        ];
 
         const workBook = new excel.Workbook();
 
@@ -999,11 +1365,23 @@ const writeToExeptionReportGeneric = (array) => {
         const workSheetResult = workBook.addWorksheet('Operadora');
 
         workSheetResult.column(1).setWidth(50);
-        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAIN_HEADER)
+            .style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
-        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
-        workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(array.customersCount).style(dataStyleException2);
+        workSheetResult
+            .cell(3, 2)
+            .string(getCurrentMonthYearShort())
+            .style(dataStyleException2);
+        workSheetResult
+            .cell(5, 1)
+            .string('Assinantes ativos na Plataforma')
+            .style(dataStyleException1);
+        workSheetResult
+            .cell(5, 2)
+            .number(array.customersCount)
+            .style(dataStyleException2);
 
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
             if (i % 2 === 0) {
@@ -1013,11 +1391,20 @@ const writeToExeptionReportGeneric = (array) => {
         }
         workSheetResult.row(MAIN_HEADER_ROWS_COUNT + 1).filter();
         for (let i = 0; i < SECONDARY_HEADER.length; i++) {
-            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT + 1, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException)
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT + 1, i + 1)
+                .string(SECONDARY_HEADER[i])
+                .style(headerStyleException);
         }
         for (let i = 0; i < array.products.length; i++) {
-            workSheetResult.cell((i + MAIN_HEADER_ROWS_COUNT + 2), 1).string(array.products[i].product).style(dataStyleException3);
-            workSheetResult.cell((i + MAIN_HEADER_ROWS_COUNT + 2), 2).number(array.products[i].customers.length).style(dataStyleException2);
+            workSheetResult
+                .cell(i + MAIN_HEADER_ROWS_COUNT + 2, 1)
+                .string(array.products[i].product)
+                .style(dataStyleException3);
+            workSheetResult
+                .cell(i + MAIN_HEADER_ROWS_COUNT + 2, 2)
+                .number(array.products[i].customers.length)
+                .style(dataStyleException2);
         }
 
         //------------------------ workSheet 2 ----------------------------
@@ -1030,30 +1417,50 @@ const writeToExeptionReportGeneric = (array) => {
 
         worksheetAllCustomers.row(2).filter();
         for (let i = 0; i < headerSheetAllcustomers.length; i++) {
-            worksheetAllCustomers.cell(2, (i + 2)).string(headerSheetAllcustomers[i]).style(headerStyle);
+            worksheetAllCustomers
+                .cell(2, i + 2)
+                .string(headerSheetAllcustomers[i])
+                .style(headerStyle);
         }
 
         let rowIndex = 0;
         for (let i = 0; i < array.products.length; i++) {
             for (let y = 0; y < array.products[i].customers.length; y++) {
-                const styleValidation = array.dealerid !== 145 ? dataStyle :
-                    validateLoginTest(array.products[i].customers[y]) ? headerStyle : dataStyle;
+                const styleValidation =
+                    array.dealerid !== 145
+                        ? dataStyle
+                        : validateLoginTest(array.products[i].customers[y])
+                        ? headerStyle
+                        : dataStyle;
 
-                worksheetAllCustomers.cell((rowIndex + 3), 2).string(array.products[i].customers[y].dealer).style(dataStyle);
-                worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.products[i].customers[y].login).style(styleValidation);
-                worksheetAllCustomers.cell((rowIndex + 3), 4).string(array.products[i].customers[y].product).style(dataStyle);
-                worksheetAllCustomers.cell((rowIndex + 3), 5).date(array.products[i].customers[y].activation).style(dataStyle);
+                worksheetAllCustomers
+                    .cell(rowIndex + 3, 2)
+                    .string(array.products[i].customers[y].dealer)
+                    .style(dataStyle);
+                worksheetAllCustomers
+                    .cell(rowIndex + 3, 3)
+                    .string(array.products[i].customers[y].login)
+                    .style(styleValidation);
+                worksheetAllCustomers
+                    .cell(rowIndex + 3, 4)
+                    .string(array.products[i].customers[y].product)
+                    .style(dataStyle);
+                worksheetAllCustomers
+                    .cell(rowIndex + 3, 5)
+                    .date(array.products[i].customers[y].activation)
+                    .style(dataStyle);
                 rowIndex++;
             }
         }
-        const filename = getPath(`RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        insertFilenameToFilenames(filename)
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        insertFilenameToFilenames(filename);
         workBook.write(filename);
-
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeToYplayColombiaReport = (array) => {
     try {
@@ -1065,7 +1472,12 @@ const writeToYplayColombiaReport = (array) => {
         const MAIN_HEADER = 'YPLAY COLOMBIA';
         const SECONDARY_HEADER = ['Empresa', 'Total'];
         const TERTIARY_HEADER = ['Empresa', ...array.packagesname]; //Dynamically populate packages
-        const HEADER_CUSTOMERS = ['Brand', 'Customer', 'Pacote', 'Data Ativação',];
+        const HEADER_CUSTOMERS = [
+            'Brand',
+            'Customer',
+            'Pacote',
+            'Data Ativação',
+        ];
 
         const workBook = new excel.Workbook();
 
@@ -1077,7 +1489,9 @@ const writeToYplayColombiaReport = (array) => {
             if (i === 0) {
                 workSheetResult.column(i + 1).setWidth(50);
             } else {
-                workSheetResult.column(i + 1).setWidth(TERTIARY_HEADER[i].length + 4); // Dynamic width based on string length
+                workSheetResult
+                    .column(i + 1)
+                    .setWidth(TERTIARY_HEADER[i].length + 4); // Dynamic width based on string length
             }
         }
 
@@ -1089,11 +1503,23 @@ const writeToYplayColombiaReport = (array) => {
             return acc;
         }, 0);
 
-        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAIN_HEADER)
+            .style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
-        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
-        workSheetResult.cell(5, 1).string('Assinantes ativos na Plataforma').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(totalCustomer).style(dataStyleException2);
+        workSheetResult
+            .cell(3, 2)
+            .string(getCurrentMonthYearShort())
+            .style(dataStyleException2);
+        workSheetResult
+            .cell(5, 1)
+            .string('Assinantes ativos na Plataforma')
+            .style(dataStyleException1);
+        workSheetResult
+            .cell(5, 2)
+            .number(totalCustomer)
+            .style(dataStyleException2);
 
         //Set row height between first and second table
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
@@ -1108,16 +1534,25 @@ const writeToYplayColombiaReport = (array) => {
 
         workSheetResult.row(MAIN_HEADER_ROWS_COUNT).filter(); // Set filter for second table's header
         for (let i = 0; i < SECONDARY_HEADER.length; i++) {
-            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException); // Populate header
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, i + 1)
+                .string(SECONDARY_HEADER[i])
+                .style(headerStyleException); // Populate header
         }
 
         // Dynamicaly populate second table
         for (let i = 0; i < array.groups.length; i++) {
-
-            if (array.groups[i].validDealer) { // Checks if it should count dealer
+            if (array.groups[i].validDealer) {
+                // Checks if it should count dealer
                 MAIN_HEADER_ROWS_COUNT++;
-                workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array.groups[i].dealer.toUpperCase()).style(dataStyleException3);
-                workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(array.groups[i].customersCount).style(dataStyleException2);
+                workSheetResult
+                    .cell(MAIN_HEADER_ROWS_COUNT, 1)
+                    .string(array.groups[i].dealer.toUpperCase())
+                    .style(dataStyleException3);
+                workSheetResult
+                    .cell(MAIN_HEADER_ROWS_COUNT, 2)
+                    .number(array.groups[i].customersCount)
+                    .style(dataStyleException2);
             }
 
             if (i + 1 === array.groups.length) {
@@ -1129,31 +1564,54 @@ const writeToYplayColombiaReport = (array) => {
             if (i === 0) {
                 MAIN_HEADER_ROWS_COUNT++; // Jump one line to start new table
             }
-            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(TERTIARY_HEADER[i]).style(headerStyleException); // Populate header
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, i + 1)
+                .string(TERTIARY_HEADER[i])
+                .style(headerStyleException); // Populate header
         }
 
         const totals = {};
         for (let i = 0; i < array.groups.length; i++) {
-
-            if (array.groups[i].validDealer) { // Checks if it should count dealer
+            if (array.groups[i].validDealer) {
+                // Checks if it should count dealer
                 MAIN_HEADER_ROWS_COUNT++;
                 // First data always deales name
-                workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array.groups[i].dealer.toUpperCase()).style(dataStyleException2);
+                workSheetResult
+                    .cell(MAIN_HEADER_ROWS_COUNT, 1)
+                    .string(array.groups[i].dealer.toUpperCase())
+                    .style(dataStyleException2);
 
                 // Populate products amounts
                 for (let y = 0; y < TERTIARY_HEADER.length; y++) {
                     if (y !== 0) {
-                        const index = array.groups[i].products.findIndex(p => p.product === TERTIARY_HEADER[y]); // Get index of current package on TERTIARY_HEADER array
-                        if (index === -1) { // not found
-                            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), y + 1).number(0).style(dataStyleException2);
-                        } else { // Found
-                            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), y + 1).number(array.groups[i].products[index].customers.length).style(dataStyleException2);
-                            typeof totals[TERTIARY_HEADER[y]] === 'undefined' ? totals[TERTIARY_HEADER[y]] = 0 : ''; // Initialize total counter inner propertie with zero if doesn't exist
-                            totals[TERTIARY_HEADER[y]] += array.groups[i].products[index].customers.length; // Counts...
+                        const index = array.groups[i].products.findIndex(
+                            (p) => p.product === TERTIARY_HEADER[y]
+                        ); // Get index of current package on TERTIARY_HEADER array
+                        if (index === -1) {
+                            // not found
+                            workSheetResult
+                                .cell(MAIN_HEADER_ROWS_COUNT, y + 1)
+                                .number(0)
+                                .style(dataStyleException2);
+                        } else {
+                            // Found
+                            workSheetResult
+                                .cell(MAIN_HEADER_ROWS_COUNT, y + 1)
+                                .number(
+                                    array.groups[i].products[index].customers
+                                        .length
+                                )
+                                .style(dataStyleException2);
+                            typeof totals[TERTIARY_HEADER[y]] === 'undefined'
+                                ? (totals[TERTIARY_HEADER[y]] = 0)
+                                : ''; // Initialize total counter inner propertie with zero if doesn't exist
+                            totals[TERTIARY_HEADER[y]] +=
+                                array.groups[i].products[
+                                    index
+                                ].customers.length; // Counts...
                         }
                     }
                 }
-
             }
 
             if (i + 1 === array.groups.length) {
@@ -1164,9 +1622,15 @@ const writeToYplayColombiaReport = (array) => {
         for (let i = 0; i < TERTIARY_HEADER.length; i++) {
             if (i === 0) {
                 MAIN_HEADER_ROWS_COUNT++; // Jump one line to start new table
-                workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string('Total').style(headerStyleException);
+                workSheetResult
+                    .cell(MAIN_HEADER_ROWS_COUNT, i + 1)
+                    .string('Total')
+                    .style(headerStyleException);
             } else {
-                workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).number(totals[TERTIARY_HEADER[i]]).style(dataStyleException2);
+                workSheetResult
+                    .cell(MAIN_HEADER_ROWS_COUNT, i + 1)
+                    .number(totals[TERTIARY_HEADER[i]])
+                    .style(dataStyleException2);
             }
         }
 
@@ -1180,30 +1644,54 @@ const writeToYplayColombiaReport = (array) => {
 
         worksheetAllCustomers.row(2).filter();
         for (let i = 0; i < HEADER_CUSTOMERS.length; i++) {
-            worksheetAllCustomers.cell(2, (i + 2)).string(HEADER_CUSTOMERS[i]).style(headerStyle);
+            worksheetAllCustomers
+                .cell(2, i + 2)
+                .string(HEADER_CUSTOMERS[i])
+                .style(headerStyle);
         }
 
         let rowIndex = 0;
         for (let i = 0; i < array.groups.length; i++) {
             for (let y = 0; y < array.groups[i].products.length; y++) {
-                for (let j = 0; j < array.groups[i].products[y].customers.length; j++) {
-                    worksheetAllCustomers.cell((rowIndex + 3), 2).string(array.groups[i].products[y].customers[j].dealer).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 3).string(array.groups[i].products[y].customers[j].login).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 4).string(array.groups[i].products[y].customers[j].product).style(dataStyle);
-                    worksheetAllCustomers.cell((rowIndex + 3), 5).date(array.groups[i].products[y].customers[j].activation).style(dataStyle);
+                for (
+                    let j = 0;
+                    j < array.groups[i].products[y].customers.length;
+                    j++
+                ) {
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 2)
+                        .string(array.groups[i].products[y].customers[j].dealer)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 3)
+                        .string(array.groups[i].products[y].customers[j].login)
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 4)
+                        .string(
+                            array.groups[i].products[y].customers[j].product
+                        )
+                        .style(dataStyle);
+                    worksheetAllCustomers
+                        .cell(rowIndex + 3, 5)
+                        .date(
+                            array.groups[i].products[y].customers[j].activation
+                        )
+                        .style(dataStyle);
                     rowIndex++;
                 }
             }
         }
         //----------------------------------------------------------------
-        const filename = getPath(`RELATORIO DE ASSINANTES - YPLAY COLOMBIA - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        insertFilenameToFilenames(filename)
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES - YPLAY COLOMBIA - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        insertFilenameToFilenames(filename);
         workBook.write(filename);
-
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 const writeUrbanSubscribedCustomer = (array) => {
     try {
@@ -1223,13 +1711,28 @@ const writeUrbanSubscribedCustomer = (array) => {
         workSheetResult.column(2).setWidth(11);
 
         //Get total customers
-        const totalCustomer = array.reduce((acc, vendor) => acc += vendor.subscribed, 0);
+        const totalCustomer = array.reduce(
+            (acc, vendor) => (acc += vendor.subscribed),
+            0
+        );
 
-        workSheetResult.cell(1, 1, 1, 2, true).string(MAIN_HEADER).style(headerStyleException);
+        workSheetResult
+            .cell(1, 1, 1, 2, true)
+            .string(MAIN_HEADER)
+            .style(headerStyleException);
         workSheetResult.cell(3, 1).string('Período').style(dataStyleException1);
-        workSheetResult.cell(3, 2).string(getCurrentMonthYearShort()).style(dataStyleException2);
-        workSheetResult.cell(5, 1).string('Assinantes cadastrados na Plataforma').style(dataStyleException1);
-        workSheetResult.cell(5, 2).number(totalCustomer).style(dataStyleException2);
+        workSheetResult
+            .cell(3, 2)
+            .string(getCurrentMonthYearShort())
+            .style(dataStyleException2);
+        workSheetResult
+            .cell(5, 1)
+            .string('Assinantes cadastrados na Plataforma')
+            .style(dataStyleException1);
+        workSheetResult
+            .cell(5, 2)
+            .number(totalCustomer)
+            .style(dataStyleException2);
 
         //Set row height between first and second table
         for (let i = 2; i <= MAIN_HEADER_ROWS_COUNT; i++) {
@@ -1244,14 +1747,23 @@ const writeUrbanSubscribedCustomer = (array) => {
 
         workSheetResult.row(MAIN_HEADER_ROWS_COUNT).filter(); // Set filter for second table's header
         for (let i = 0; i < SECONDARY_HEADER.length; i++) {
-            workSheetResult.cell(MAIN_HEADER_ROWS_COUNT, i + 1).string(SECONDARY_HEADER[i]).style(headerStyleException); // Populate header
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, i + 1)
+                .string(SECONDARY_HEADER[i])
+                .style(headerStyleException); // Populate header
         }
 
         // Dynamicaly populate second table
         for (let i = 0; i < array.length; i++) {
             MAIN_HEADER_ROWS_COUNT++;
-            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(array[i]['vendors_name'].toUpperCase()).style(dataStyleException3);
-            workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(array[i].subscribed).style(dataStyleException2);
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, 1)
+                .string(array[i]['vendors_name'].toUpperCase())
+                .style(dataStyleException3);
+            workSheetResult
+                .cell(MAIN_HEADER_ROWS_COUNT, 2)
+                .number(array[i].subscribed)
+                .style(dataStyleException2);
 
             if (i + 1 === array.length) {
                 MAIN_HEADER_ROWS_COUNT++;
@@ -1259,15 +1771,16 @@ const writeUrbanSubscribedCustomer = (array) => {
         }
 
         //----------------------------------------------------------------
-        const filename = getPath(`RELATORIO DE ASSINANTES CADASTRADOS - URBANTV - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`);
-        insertFilenameToFilenames(filename)
+        const filename = getPath(
+            `RELATORIO DE ASSINANTES CADASTRADOS - URBANTV - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+        );
+        insertFilenameToFilenames(filename);
         workBook.write(filename);
-
     } catch (error) {
         console.log(error);
     }
-}
+};
 
 module.exports = {
-    writeFile
-}
+    writeFile,
+};
