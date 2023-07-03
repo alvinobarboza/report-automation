@@ -25,7 +25,7 @@ const STINGRAYCOLOMBIA = [
     STINGRAYCO,
     GIBRAFIBRA50,
     GIGAFIBRALOCAL,
-    YPLAYCOMLOMBIA
+    YPLAYCOMLOMBIA,
 ];
 const STINGRAYBRASIL = [
     STINGRAY,
@@ -34,7 +34,7 @@ const STINGRAYBRASIL = [
     SOUPLAYMASTERB,
     SOUPLAYMASTERC,
     COPRELAPPLE,
-    COPRELGOOGLE
+    COPRELGOOGLE,
 ];
 
 const CANAISLOCAIS = 'Canais Locais -';
@@ -72,28 +72,28 @@ const switchCase = {
         t.urban = 1;
         return t;
     },
-    'default': (t) => {
+    default: (t) => {
         t.error = 0;
         return t;
-    }
-}
+    },
+};
 
 const smsBody = (id) => `{
     "data":{
         "reports_id": ${id}
     }
-}`
+}`;
 const mwBody = (id, date) => `{
     "data":{
         "reportsId": ${id}
     }
-}`
+}`;
 const smsHeader = (token) => {
-    return { 'Authorization': token }
-}
+    return { Authorization: token };
+};
 const mwHeader = (token) => {
-    return { 'Authorization-user': token }
-}
+    return { 'Authorization-user': token };
+};
 
 const TELEMEDICINA_QUERY = `
 select 
@@ -119,7 +119,7 @@ from
 	pt.package_types_type = cs.customer_svas_types
 where 
 	customer_svas_status is true and 
-	svas_enum = 'TELEMEDICINA'
+	svas_enum = $1
 `;
 
 module.exports = {
@@ -146,5 +146,5 @@ module.exports = {
     URBANTV,
     ADULTO,
     switchCase,
-    TELEMEDICINA_QUERY
-}
+    TELEMEDICINA_QUERY,
+};
