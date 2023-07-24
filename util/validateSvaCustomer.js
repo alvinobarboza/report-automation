@@ -14,7 +14,7 @@ function validateSvaData(svaActive, svaSubscribed) {
 }
 
 function groupSvaUserFromMotvReport(active, data) {
-    const dealersGrouped = {};
+    const tempObject = {};
     const notValidDealers = [
         1, // 'JACON dealer'
         3, // 'Admin'
@@ -23,28 +23,30 @@ function groupSvaUserFromMotvReport(active, data) {
         13, // 'Z-Não-usar'
         22, // 'ADMIN-YOUCAST'
     ];
+    const groupedDealersArray = [];
 
-    console.time('group');
+    console.time('groupSubscribed');
     for (const customer of data) {
         if (notValidDealers.includes(customer.dealerid)) {
             continue;
         }
 
-        if (dealersGrouped[customer.dealer]) {
-            dealersGrouped[customer.dealer].customers.push(customer);
+        if (tempObject[customer.dealer]) {
+            tempObject[customer.dealer].customers.push(customer);
         } else {
-            dealersGrouped[customer.dealer] = {
+            tempObject[customer.dealer] = {
                 dealer: customer.dealer,
                 dealerid: customer.dealerid,
                 customers: [customer],
             };
+            groupedDealersArray.push(tempObject[customer.dealer]);
         }
     }
-
-    const groupedDealersArray = Object.values(dealersGrouped);
-
+    console.timeEnd('groupSubscribed');
+    console.time('groupActive');
     for (const dealer of groupedDealersArray) {
         const customersGrouped = {};
+        const customers = [];
         for (const customer of dealer.customers) {
             if (validateLoginTest(customer)) {
                 continue;
@@ -68,9 +70,9 @@ function groupSvaUserFromMotvReport(active, data) {
                     status: status,
                     products: [customer],
                 };
+                customers.push(customersGrouped[customer.idsms]);
             }
         }
-        const customers = Object.values(customersGrouped);
         dealer.customers = customers;
         dealer.subscribed = customers.length;
         dealer.active = customers.reduce((amount, customer) => {
@@ -80,7 +82,7 @@ function groupSvaUserFromMotvReport(active, data) {
             return amount;
         }, 0);
     }
-    console.timeEnd('group');
+    console.timeEnd('groupActive');
     return groupedDealersArray;
 }
 

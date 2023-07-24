@@ -20,7 +20,7 @@ const { validationUrban } = require('./util/urbanValidation');
 
 const pool = require('./util/dbconnection.js');
 const { validateSvaData } = require('./util/validateSvaCustomer');
-const { accessLog } = require('./util/logs');
+const { accessLog, log } = require('./util/logs');
 
 const TELEMEDICINA = 'TELEMEDICINA';
 const FITANYWHERE = 'FITANYWHERE';
@@ -145,7 +145,6 @@ const getDealersData = () =>
             activeCustomers.response.rows,
             dealers.response.rows
         );
-        // // console.log(oldPackaging);
         writeFile(
             customers.response.rows,
             oldPackaging,

@@ -178,7 +178,7 @@ function writeStingrayReport(data) {
 
         //     if (data[i].countStingray) { // Checks if it should count dealer
         //         MAIN_HEADER_ROWS_COUNT++;
-        //         workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(data[i].dealer.toUpperCase()).style(dataStyleException3);
+        //         workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(data[i].dealer?.toUpperCase()).style(dataStyleException3);
         //         workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(data[i].countStingray).style(dataStyleException2);
         //     }
 
@@ -298,7 +298,7 @@ function writeStingrayReportCo(data) {
 
         //     if (data[i].countStingrayCo) { // Checks if it should count dealer
         //         MAIN_HEADER_ROWS_COUNT++;
-        //         workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(data[i].dealer.toUpperCase()).style(dataStyleException3);
+        //         workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 1).string(data[i].dealer?.toUpperCase()).style(dataStyleException3);
         //         workSheetResult.cell((MAIN_HEADER_ROWS_COUNT), 2).number(data[i].countStingrayCo).style(dataStyleException2);
         //     }
 
@@ -516,7 +516,7 @@ const writeBrandReportOld = (data) => {
                         case 'dealer':
                             worksheetResult
                                 .cell(rowCounter + 3, 2)
-                                .string(data[i][columns[y]].toUpperCase())
+                                .string(data[i][columns[y]]?.toUpperCase())
                                 .style(dataStyle);
                             columnCount++;
                             break;
@@ -1110,8 +1110,8 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
                                 .cell(rowCounter + 2, 1)
                                 .string(
                                     dealers[y].nomefantasia === ''
-                                        ? dealers[y].name.toUpperCase()
-                                        : dealers[y].nomefantasia.toUpperCase()
+                                        ? dealers[y].name?.toUpperCase()
+                                        : dealers[y].nomefantasia?.toUpperCase()
                                 )
                                 .style({
                                     ...dataStyleSimbaProviders,
@@ -1119,14 +1119,14 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
                                 });
                             worksheetProviders
                                 .cell(rowCounter + 2, 2)
-                                .string(dealers[y].razaosocial.toUpperCase())
+                                .string(dealers[y].razaosocial?.toUpperCase())
                                 .style({
                                     ...dataStyleSimbaProviders,
                                     alignment: { horizontal: ['left'] },
                                 });
                             worksheetProviders
                                 .cell(rowCounter + 2, 3)
-                                .string(dealers[y].cnpj.toUpperCase())
+                                .string(dealers[y].cnpj?.toUpperCase())
                                 .style({
                                     ...dataStyleSimbaProviders,
                                     alignment: { horizontal: ['center'] },
@@ -1134,7 +1134,7 @@ const writeProgramadorasReportSimba = (old, neW, dealers) => {
                             worksheetProviders
                                 .cell(rowCounter + 2, 4)
                                 .string(
-                                    `${dealers[y].cidade}/${dealers[y].uf}`.toUpperCase()
+                                    `${dealers[y].cidade}/${dealers[y].uf}`?.toUpperCase()
                                 )
                                 .style({
                                     ...dataStyleSimbaProviders,
@@ -1317,7 +1317,7 @@ const writeUrbanActiveCustomer = (array) => {
             MAIN_HEADER_ROWS_COUNT++;
             workSheetResult
                 .cell(MAIN_HEADER_ROWS_COUNT, 1)
-                .string(array[i]['vendors_name'].toUpperCase())
+                .string(array[i]['vendors_name']?.toUpperCase())
                 .style(dataStyleException3);
             workSheetResult
                 .cell(MAIN_HEADER_ROWS_COUNT, 2)
@@ -1349,7 +1349,7 @@ const writeToExeptionReport = (data) => {
 const writeToExeptionReportGeneric = (array) => {
     try {
         //console.log(array.dealer);
-        const MAIN_HEADER = array.dealer.toUpperCase();
+        const MAIN_HEADER = array.dealer?.toUpperCase();
         const MAIN_HEADER_ROWS_COUNT = 6;
         const SECONDARY_HEADER = ['Pacote', 'QTD'];
         const headerSheetAllcustomers = [
@@ -1453,7 +1453,7 @@ const writeToExeptionReportGeneric = (array) => {
             }
         }
         const filename = getPath(
-            `RELATORIO DE ASSINANTES - ${array.dealer.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
+            `RELATORIO DE ASSINANTES - ${array.dealer?.toUpperCase()} - Ref. - ${getCurrentMonth()}_${getCurrentYear()}.xlsx`
         );
         insertFilenameToFilenames(filename);
         workBook.write(filename);
@@ -1547,7 +1547,7 @@ const writeToYplayColombiaReport = (array) => {
                 MAIN_HEADER_ROWS_COUNT++;
                 workSheetResult
                     .cell(MAIN_HEADER_ROWS_COUNT, 1)
-                    .string(array.groups[i].dealer.toUpperCase())
+                    .string(array.groups[i].dealer?.toUpperCase())
                     .style(dataStyleException3);
                 workSheetResult
                     .cell(MAIN_HEADER_ROWS_COUNT, 2)
@@ -1578,7 +1578,7 @@ const writeToYplayColombiaReport = (array) => {
                 // First data always deales name
                 workSheetResult
                     .cell(MAIN_HEADER_ROWS_COUNT, 1)
-                    .string(array.groups[i].dealer.toUpperCase())
+                    .string(array.groups[i].dealer?.toUpperCase())
                     .style(dataStyleException2);
 
                 // Populate products amounts
@@ -1758,7 +1758,7 @@ const writeUrbanSubscribedCustomer = (array) => {
             MAIN_HEADER_ROWS_COUNT++;
             workSheetResult
                 .cell(MAIN_HEADER_ROWS_COUNT, 1)
-                .string(array[i]['vendors_name'].toUpperCase())
+                .string(array[i]['vendors_name']?.toUpperCase())
                 .style(dataStyleException3);
             workSheetResult
                 .cell(MAIN_HEADER_ROWS_COUNT, 2)

@@ -24,36 +24,51 @@ const groupByGeneric = (ungrouped, delimiter, dataToGroup) => {
         value[dataToGroup] = [];
         for (let y = 0; y < ungrouped.length; y++) {
             if (ungrouped[y][delimiter] === nonRepeated[i]) {
-                value[dataToGroup].push(ungrouped[y])
+                value[dataToGroup].push(ungrouped[y]);
             }
         }
         groupedValues.push(value);
     }
     return groupedValues;
-}
+};
 
 /*
 Using generec group twice
 */
 const groupByDealerByCustomer = (ungroupedList) => {
-    const groupedByDealer = groupByGeneric(ungroupedList, 'dealer', 'customers');
-    //Group customers together, empty customers from main array and push the new one one-by-one, 
+    const groupedByDealer = groupByGeneric(
+        ungroupedList,
+        'dealer',
+        'customers'
+    );
+    //Group customers together, empty customers from main array and push the new one one-by-one,
     //since if pushed customers group, it is already an array, it would be [[...,...]]
     for (let i = 0; i < groupedByDealer.length; i++) {
-        const customers = groupByGeneric(groupedByDealer[i].customers, 'login', 'products');
-        groupedByDealer[i].customers.splice(0, groupedByDealer[i].customers.length);
+        const customers = groupByGeneric(
+            groupedByDealer[i].customers,
+            'login',
+            'products'
+        );
+        groupedByDealer[i].customers.splice(
+            0,
+            groupedByDealer[i].customers.length
+        );
         for (let y = 0; y < customers.length; y++) {
             groupedByDealer[i].customers.push(customers[y]);
         }
     }
     return groupedByDealer;
-}
+};
 
 function groupByVendorByCustomer(data) {
     const tempGrouped = groupByGeneric(data, 'vendors_name', 'customers');
 
     for (const vendor of tempGrouped) {
-        const tempCustomers = groupByGeneric(vendor.customers, 'customers_login', 'products');
+        const tempCustomers = groupByGeneric(
+            vendor.customers,
+            'customers_login',
+            'products'
+        );
         vendor.customers.splice(0, vendor.customers.length);
         for (const customer of tempCustomers) {
             vendor.customers.push(customer);
@@ -65,5 +80,5 @@ function groupByVendorByCustomer(data) {
 module.exports = {
     groupByGeneric,
     groupByDealerByCustomer,
-    groupByVendorByCustomer
-}
+    groupByVendorByCustomer,
+};

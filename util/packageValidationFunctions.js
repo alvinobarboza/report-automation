@@ -14,67 +14,73 @@ const {
     YPLAYADULTO,
     STINGRAYBRASIL,
     STINGRAYCOLOMBIA,
-} = require("./constants");
-const { groupByGeneric } = require("./groupByFunctions");
+} = require('./constants');
+const { groupByGeneric } = require('./groupByFunctions');
 
 // Main function
-async function validation(data, activeCustomers, dealers) {
+async function validation(data, activeCustomers, dealersData) {
     const oldPackage = [];
     const newPackage = [];
     try {
         // =======Active/Inactive======
 
-        for (let i = 0; i < data.length; i++) {
+        for (const dealers of data) {
             let activeCount = 0;
-            for (let j = 0; j < data[i].customers.length; j++) {
-                data[i].customers[j].isactive = false;
-                for (let y = 0; y < activeCustomers.length; y++) {
-                    if (activeCustomers[y].mwid === data[i].customers[j].products[0].idmw) {
-                        data[i].customers[j].isactive = true;
+            for (const customer of dealers.customers) {
+                customer.isactive = false;
+                for (const activeCustomer of activeCustomers) {
+                    if (activeCustomer.mwid === customer.products[0].idmw) {
+                        customer.isactive = true;
                         activeCount++;
                     }
                 }
             }
-            data[i].activeCount = activeCount;
+            dealers.activeCount = activeCount;
         }
 
         // ============================
 
-        // Seperation for new and old packaging 
-        for (let i = 0; i < data.length; i++) {
+        // Seperation for new and old packaging
+        for (const dealers of data) {
             let isNew = false;
             let counterStingray = 0;
             let counterStingrayCo = 0;
-            for (let y = 0; y < data[i].customers.length; y++) {
+            for (const customer of dealers.customers) {
                 let stingray = false;
                 let stingrayco = false;
-                for (let x = 0; x < data[i].customers[y].products.length; x++) {
-                    data[i].dealerid = data[i].customers[y].products[x].dealerid;
-                    if (data[i].customers[y].products[x].productid === YPLAYPACOTEPREMIUM ||
-                        data[i].customers[y].products[x].productid === YPLAYPACOTESTART ||
-                        data[i].customers[y].products[x].product.includes(CANAISLOCAIS)) {
+                for (const product of customer.products) {
+                    dealers.dealerid = product.dealerid;
+                    if (
+                        product.productid === YPLAYPACOTEPREMIUM ||
+                        product.productid === YPLAYPACOTESTART ||
+                        product.product.includes(CANAISLOCAIS)
+                    ) {
                         isNew = true;
                     }
-                    if (data[i].customers[y].isactive) {
-                        stingray = validateStingrayPackage(data[i].customers[y].products[x], stingray);
-                        stingrayco = validateStingrayColombiaPackage(data[i].customers[y].products[x], stingrayco);
+                    if (customer.isactive) {
+                        stingray = validateStingrayPackage(product, stingray);
+                        stingrayco = validateStingrayColombiaPackage(
+                            product,
+                            stingrayco
+                        );
                     }
                 }
                 stingray ? counterStingray++ : 0;
                 stingrayco ? counterStingrayCo++ : 0;
-                data[i].customers[y].stingray = stingray;
-                data[i].customers[y].stingrayco = stingrayco;
+                customer.stingray = stingray;
+                customer.stingrayco = stingrayco;
             }
-            data[i].countStingray = counterStingray;
-            data[i].countStingrayCo = counterStingrayCo;
-            data[i].cnpj = await dealers.find(d => d.id === data[i].dealerid)?.cnpj;
+            dealers.countStingray = counterStingray;
+            dealers.countStingrayCo = counterStingrayCo;
+            dealers.cnpj = await dealersData.find(
+                (d) => d.id === dealers.dealerid
+            )?.cnpj;
             if (isNew) {
-                newPackage.push(data[i]);
+                newPackage.push(dealers);
             } else {
-                oldPackage.push(data[i]);
+                oldPackage.push(dealers);
             }
         }
-
     } catch (error) {
         console.log(error);
     }
@@ -84,8 +90,8 @@ async function validation(data, activeCustomers, dealers) {
 }
 
 function validateStingrayColombiaPackage(product, valide) {
-    for (let j = 0; j < STINGRAYCOLOMBIA.length; j++) {
-        if (product.productid === STINGRAYCOLOMBIA[j] && !validateLoginTest(product)) {
+    for (const ID of STINGRAYCOLOMBIA) {
+        if (product.productid === ID && !validateLoginTest(product)) {
             valide = true;
         }
     }
@@ -93,8 +99,8 @@ function validateStingrayColombiaPackage(product, valide) {
 }
 
 function validateStingrayPackage(product, valide) {
-    for (let j = 0; j < STINGRAYBRASIL.length; j++) {
-        if (product.productid === STINGRAYBRASIL[j] && !validateLoginTest(product)) {
+    for (const ID of STINGRAYBRASIL) {
+        if (product.productid === ID && !validateLoginTest(product)) {
             valide = true;
         }
     }
@@ -115,13 +121,19 @@ function validationOldProducts(data) {
         let error = 0;
         let test = 0;
         if (dealerValidation(data[indexD])) {
-            for (let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
+            for (
+                let indexC = 0;
+                indexC < data[indexD].customers.length;
+                indexC++
+            ) {
                 if (validateLoginTest(data[indexD].customers[indexC])) {
                     test++;
                     continue;
                 }
-                const { pacoteYplayStatus, pacoteYplay, urban } = validateProductsOld(data[indexD].customers[indexC]);
-                data[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
+                const { pacoteYplayStatus, pacoteYplay, urban } =
+                    validateProductsOld(data[indexD].customers[indexC]);
+                data[indexD].customers[indexC].pacoteYplayStatus =
+                    pacoteYplayStatus;
                 data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
                 switch (pacoteYplay) {
                     case BASIC:
@@ -184,13 +196,19 @@ function validationNewProducts(data) {
             let adultoCount = 0;
             let test = 0;
             if (dealerValidation(data[indexD])) {
-                for (let indexC = 0; indexC < data[indexD].customers.length; indexC++) {
+                for (
+                    let indexC = 0;
+                    indexC < data[indexD].customers.length;
+                    indexC++
+                ) {
                     if (validateLoginTest(data[indexD].customers[indexC])) {
                         test++;
                         continue;
                     }
-                    const { pacoteYplayStatus, pacoteYplay, pacoteAdulto } = validateProductsNew(data[indexD].customers[indexC]);
-                    data[indexD].customers[indexC].pacoteYplayStatus = pacoteYplayStatus;
+                    const { pacoteYplayStatus, pacoteYplay, pacoteAdulto } =
+                        validateProductsNew(data[indexD].customers[indexC]);
+                    data[indexD].customers[indexC].pacoteYplayStatus =
+                        pacoteYplayStatus;
                     data[indexD].customers[indexC].pacoteYplay = pacoteYplay;
                     switch (pacoteYplay) {
                         case START:
@@ -221,7 +239,7 @@ function validationNewProducts(data) {
             data[indexD].test = test;
         }
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
     return data;
 }
@@ -236,8 +254,8 @@ function validateProductsOld(customer) {
         completo: 0,
         kids: 0,
         nacionais: 0,
-        urban: 0
-    }
+        urban: 0,
+    };
     try {
         for (let i = 0; i < customer.products.length; i++) {
             if (customer.products[i].product.includes(FULL)) {
@@ -251,11 +269,14 @@ function validateProductsOld(customer) {
             } else if (customer.products[i].product.includes(URBANTV)) {
                 validator.urban = 1;
             } else {
-                validator = checkProduts(customer.products[i].product, validator)
+                validator = checkProduts(
+                    customer.products[i].product,
+                    validator
+                );
             }
-        };
+        }
     } catch (error) {
-        console.log(error)
+        console.log(error);
     }
     return validateYplayProductOld(validator);
 }
@@ -277,7 +298,7 @@ function validateProductsNew(customer) {
         if (customer.products[i].productid === YPLAYADULTO) {
             adulto = true;
         }
-    };
+    }
 
     return validateYplayProductNew(start, premium, locais, adulto);
 }
@@ -287,27 +308,63 @@ function validateYplayProductOld(validator) {
     let pacoteYplayStatus = '';
     let urban = validator.urban;
 
-    if ((validator.basic + validator.light + validator.nacionais + validator.kids) === 4 &&
-        (validator.full + validator.compact + validator.premium + validator.completo) === 0) {
+    if (
+        validator.basic +
+            validator.light +
+            validator.nacionais +
+            validator.kids ===
+            4 &&
+        validator.full +
+            validator.compact +
+            validator.premium +
+            validator.completo ===
+            0
+    ) {
         pacoteYplay = BASIC;
         pacoteYplayStatus = SUCCESS;
-    }
-    else if ((validator.compact + validator.light + validator.nacionais + validator.kids) === 4 &&
-        (validator.full + validator.basic + validator.premium + validator.completo) === 0) {
+    } else if (
+        validator.compact +
+            validator.light +
+            validator.nacionais +
+            validator.kids ===
+            4 &&
+        validator.full +
+            validator.basic +
+            validator.premium +
+            validator.completo ===
+            0
+    ) {
         pacoteYplay = COMPACT;
         pacoteYplayStatus = SUCCESS;
-    }
-    else if ((validator.full + validator.completo + validator.nacionais + validator.kids) === 4 &&
-        (validator.basic + validator.compact + validator.premium + validator.light) === 0) {
+    } else if (
+        validator.full +
+            validator.completo +
+            validator.nacionais +
+            validator.kids ===
+            4 &&
+        validator.basic +
+            validator.compact +
+            validator.premium +
+            validator.light ===
+            0
+    ) {
         pacoteYplay = FULL;
         pacoteYplayStatus = SUCCESS;
-    }
-    else if ((validator.premium + validator.completo + validator.nacionais + validator.kids) === 4 &&
-        (validator.full + validator.compact + validator.basic + validator.light) === 0) {
+    } else if (
+        validator.premium +
+            validator.completo +
+            validator.nacionais +
+            validator.kids ===
+            4 &&
+        validator.full +
+            validator.compact +
+            validator.basic +
+            validator.light ===
+            0
+    ) {
         pacoteYplay = PREMIUM;
         pacoteYplayStatus = SUCCESS;
-    }
-    else {
+    } else {
         pacoteYplay = ERROR;
         pacoteYplayStatus = ERROR;
     }
@@ -364,43 +421,75 @@ function validateYplayExceptions(data) {
     for (let index = 0; index < data.length; index++) {
         switch (data[index].dealerid) {
             case 37: //'softxx'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 55: // 'net-angra'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 87: // 'nbs'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             // case 26: // 'NOVANET'
             //     addToProductCounterCustomers(data[index], productCounterCustomers);
             //     break;
             case 19: // 'ADYLNET'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 123: // 'CCS'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 124: // 'AGE TELECOM'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 128: // 'COPREL'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 118: // 'WECLIX'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 145: // 'giga-fibra-co'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             case 140: // 'MASTER'
-                addToProductCounterCustomers(data[index], productCounterCustomers);
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
                 break;
             default:
                 break;
         }
-        if (data[index].customers[0].products[0].parentdealer === 134 ||
-            data[index].dealer === 'OLLA TELECOM') {
+        if (
+            data[index].customers[0].products[0].parentdealer === 134 ||
+            data[index].dealer === 'OLLA TELECOM'
+        ) {
             for (let i = 0; i < data[index].customers.length; i++) {
                 ollacustomers.customers.push(data[index].customers[i]);
             }
@@ -417,14 +506,18 @@ function addToProductCounterCustomers(array, productGrouped) {
     let customerCounter = 0;
     try {
         for (let i = 0; i < array.customers.length; i++) {
-            if (!(validateLoginTest(array.customers[i])) && array.dealerid !== 145) {
+            if (
+                !validateLoginTest(array.customers[i]) &&
+                array.dealerid !== 145
+            ) {
                 for (let y = 0; y < array.customers[i].products.length; y++) {
-                    tempTest.push(array.customers[i].products[y])
+                    tempTest.push(array.customers[i].products[y]);
                 }
                 customerCounter++;
-            } else if (array.dealerid === 145) { // GIGA FIBRA must show all customers
+            } else if (array.dealerid === 145) {
+                // GIGA FIBRA must show all customers
                 for (let y = 0; y < array.customers[i].products.length; y++) {
-                    tempTest.push(array.customers[i].products[y])
+                    tempTest.push(array.customers[i].products[y]);
                 }
                 customerCounter++;
             }
@@ -434,7 +527,7 @@ function addToProductCounterCustomers(array, productGrouped) {
             dealerid: array.dealerid,
             dealer: array.dealer,
             products: groupedData,
-            customersCount: customerCounter
+            customersCount: customerCounter,
         });
     } catch (error) {
         console.log(error);
@@ -444,7 +537,7 @@ function addToProductCounterCustomers(array, productGrouped) {
 function validateYplayComlombia(data) {
     const productGrouped = {
         packagesname: [],
-        groups: []
+        groups: [],
     };
     const packagesSet = new Set();
     try {
@@ -454,27 +547,38 @@ function validateYplayComlombia(data) {
                 let customerCounter = 0;
 
                 for (let j = 0; j < data[i].customers.length; j++) {
-                    for (let y = 0; y < data[i].customers[j].products.length; y++) {
+                    for (
+                        let y = 0;
+                        y < data[i].customers[j].products.length;
+                        y++
+                    ) {
                         tempTest.push(data[i].customers[j].products[y]);
-                        const packageTmp = data[i].customers[j].products[y].product;
-                        packageTmp.toUpperCase().includes('HOMEPAGE') || data[i].dealerid === 153 ? '' : packagesSet.add(packageTmp);
+                        const packageTmp =
+                            data[i].customers[j].products[y].product;
+                        packageTmp.toUpperCase().includes('HOMEPAGE') ||
+                        data[i].dealerid === 153
+                            ? ''
+                            : packagesSet.add(packageTmp);
                     }
                     customerCounter++;
                 }
 
-                const groupedData = groupByGeneric(tempTest, 'product', 'customers');
+                const groupedData = groupByGeneric(
+                    tempTest,
+                    'product',
+                    'customers'
+                );
                 productGrouped.groups.push({
                     dealerid: data[i].dealerid,
                     dealer: data[i].dealer,
                     products: groupedData,
                     customersCount: customerCounter,
-                    validDealer: !(data[i].dealerid === 153) // Discard Yplay colombia
+                    validDealer: !(data[i].dealerid === 153), // Discard Yplay colombia
                 });
             }
         }
         productGrouped.packagesname = Array.from(packagesSet);
         return productGrouped;
-
     } catch (error) {
         console.log(error);
         return [];
@@ -482,18 +586,21 @@ function validateYplayComlombia(data) {
 }
 
 function validateLoginTest(d) {
-    return d.login.toLowerCase().includes('.demo') ||
+    return (
+        d.login.toLowerCase().includes('.demo') ||
         d.login.toLowerCase().includes('demo.') ||
         d.login.toLowerCase().includes('test') ||
         d.login.toLowerCase().includes('youcast') ||
         d.login.toLowerCase().includes('.yc') ||
         d.login.toLowerCase().includes('yc.') ||
         d.login.toLowerCase().includes('trial') ||
-        d.login.toLowerCase().includes('yplay');
+        d.login.toLowerCase().includes('yplay')
+    );
 }
 
 function dealerValidation(customer) {
-    return customer.customers[0].products[0].parentdealer !== 134 &&
+    return (
+        customer.customers[0].products[0].parentdealer !== 134 &&
         customer.dealerid !== 1 && // 'JACON dealer'
         customer.dealerid !== 3 && // 'Admin'
         customer.dealerid !== 4 && // 'TCM Telecom'
@@ -502,8 +609,8 @@ function dealerValidation(customer) {
         customer.dealerid !== 13 && // 'Z-Não-usar'
         customer.dealerid !== 15 && // 'YPLAY'
         customer.dealerid !== 19 && // 'ADYLNET'
-        customer.dealerid !== 18 &&// 'HSL'
-        customer.dealerid !== 22 && // 'ADMIN-YOUCAST' 
+        customer.dealerid !== 18 && // 'HSL'
+        customer.dealerid !== 22 && // 'ADMIN-YOUCAST'
         customer.dealerid !== 21 && // 'LBR'
         // customer.dealerid !== 26 && // 'NOVANET'
         customer.dealerid !== 37 && // 'softxx'
@@ -516,7 +623,8 @@ function dealerValidation(customer) {
         customer.dealerid !== 128 && // 'COPREL'
         customer.dealerid !== 134 && // 'OLLA TELECOM'
         customer.dealerid !== 145 && // giga-fibra-co
-        customer.customers[0].products[0].vendorid !== 34; // Yplay comlombia
+        customer.customers[0].products[0].vendorid !== 34
+    ); // Yplay comlombia
 }
 
 module.exports = {
@@ -524,5 +632,5 @@ module.exports = {
     validateYplayExceptions,
     dealerValidation,
     validateLoginTest,
-    validateYplayComlombia
+    validateYplayComlombia,
 };
