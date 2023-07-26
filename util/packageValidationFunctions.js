@@ -602,6 +602,7 @@ function dealerValidation(customer) {
     return (
         customer.customers[0].products[0].parentdealer !== 134 &&
         customer.dealerid !== 1 && // 'JACON dealer'
+        customer.dealerid !== 2 && // 'Master dealer'
         customer.dealerid !== 3 && // 'Admin'
         customer.dealerid !== 4 && // 'TCM Telecom'
         customer.dealerid !== 5 && // 'Youcast CSMS'
@@ -621,6 +622,7 @@ function dealerValidation(customer) {
         customer.dealerid !== 124 && // 'AGE TELECOM'
         customer.dealerid !== 123 && // 'CCS'
         customer.dealerid !== 128 && // 'COPREL'
+        customer.dealerid !== 140 && // 'MASTER'
         customer.dealerid !== 134 && // 'OLLA TELECOM'
         customer.dealerid !== 145 && // giga-fibra-co
         customer.customers[0].products[0].vendorid !== 34
