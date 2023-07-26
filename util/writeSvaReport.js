@@ -31,7 +31,12 @@ const writeSvaReport = (dataTuple, getPath, insertFilenameToFilenames, sva) => {
         //console.log(array.dealer);
         const MAIN_HEADER = sva;
         const MAIN_HEADER_ROWS_COUNT = 8;
-        const SECONDARY_HEADER = ['Empresas', 'QTD Cadastrados', 'QTD Ativos'];
+        const SECONDARY_HEADER = [
+            'Empresas',
+            'CNPJ',
+            'QTD Cadastrados',
+            'QTD Ativos',
+        ];
         const headerSheetAllcustomers = [
             'Empresa',
             'Cliente',
@@ -45,8 +50,9 @@ const writeSvaReport = (dataTuple, getPath, insertFilenameToFilenames, sva) => {
         const workSheetResult = workBook.addWorksheet('Operadora');
 
         workSheetResult.column(1).setWidth(50);
-        workSheetResult.column(2).setWidth(22);
-        workSheetResult.column(3).setWidth(18);
+        workSheetResult.column(2).setWidth(40);
+        workSheetResult.column(3).setWidth(22);
+        workSheetResult.column(4).setWidth(18);
         workSheetResult
             .cell(1, 1, 1, 3, true)
             .string(MAIN_HEADER)
@@ -94,10 +100,14 @@ const writeSvaReport = (dataTuple, getPath, insertFilenameToFilenames, sva) => {
                 .style(dataStyleException3);
             workSheetResult
                 .cell(i + MAIN_HEADER_ROWS_COUNT + 2, 2)
+                .string(data[i].dealersCnpj)
+                .style(dataStyleException3);
+            workSheetResult
+                .cell(i + MAIN_HEADER_ROWS_COUNT + 2, 3)
                 .number(data[i].subscribed)
                 .style(dataStyleException2);
             workSheetResult
-                .cell(i + MAIN_HEADER_ROWS_COUNT + 2, 3)
+                .cell(i + MAIN_HEADER_ROWS_COUNT + 2, 4)
                 .number(data[i].active)
                 .style(dataStyleException2);
         }

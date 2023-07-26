@@ -483,6 +483,18 @@ function validateYplayExceptions(data) {
                     productCounterCustomers
                 );
                 break;
+            case 141: // 'CABONNET'
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
+                break;
+            case 181: // NORTETEL
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
+                break;
             default:
                 break;
         }
@@ -625,6 +637,14 @@ function dealerValidation(customer) {
         customer.dealerid !== 140 && // 'MASTER'
         customer.dealerid !== 134 && // 'OLLA TELECOM'
         customer.dealerid !== 145 && // giga-fibra-co
+        customer.dealerid !== 141 && // CABONNET
+        customer.dealerid !== 181 && // NORTETEL
+        customer.dealerid !== 238 && // RUPI-TELECOM
+        customer.dealerid !== 178 && // SOUPLAY.MASTER
+        customer.dealerid !== 209 && // STOK-NET
+        customer.dealerid !== 230 && // TRIUNFO-NET
+        customer.dealerid !== 227 && // PROVYNET-TELECOM
+        customer.dealerid !== 235 && // CPW-TECNOLOGIA
         customer.customers[0].products[0].vendorid !== 34
     ); // Yplay comlombia
 }

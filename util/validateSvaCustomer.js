@@ -37,6 +37,7 @@ function groupSvaUserFromMotvReport(active, data) {
             tempObject[customer.dealer] = {
                 dealer: customer.dealer,
                 dealerid: customer.dealerid,
+                dealersCnpj: customer.cnpj ? customer.cnpj : '',
                 customers: [customer],
             };
             groupedDealersArray.push(tempObject[customer.dealer]);
