@@ -495,6 +495,18 @@ function validateYplayExceptions(data) {
                     productCounterCustomers
                 );
                 break;
+            case 220: // AZZA
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
+                break;
+            case 207: // AVANZA
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
+                break;
             default:
                 break;
         }
@@ -645,6 +657,8 @@ function dealerValidation(customer) {
         customer.dealerid !== 230 && // TRIUNFO-NET
         customer.dealerid !== 227 && // PROVYNET-TELECOM
         customer.dealerid !== 235 && // CPW-TECNOLOGIA
+        customer.dealerid !== 220 && // AZZA
+        customer.dealerid !== 207 && // AVANZA
         customer.customers[0].products[0].vendorid !== 34
     ); // Yplay comlombia
 }
