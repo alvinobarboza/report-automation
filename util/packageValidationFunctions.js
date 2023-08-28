@@ -566,7 +566,18 @@ function validateYplayComlombia(data) {
     const packagesSet = new Set();
     try {
         for (let i = 0; i < data.length; i++) {
-            if (data[i].customers[0].products[0].vendorid === 34) {
+            console.log('Inside: ', data[i].dealerid);
+            if (
+                data[i].customers[0].products[0].vendorid === 34 &&
+                data[i].dealerid !== 1 && // 'JACON dealer'
+                data[i].dealerid !== 2 && // 'Master dealer'
+                data[i].dealerid !== 3 && // 'Admin'
+                data[i].dealerid !== 4 && // 'TCM Telecom'
+                data[i].dealerid !== 5 && // 'Youcast CSMS'
+                data[i].dealerid !== 7 && // 'Z-Não-usar'
+                data[i].dealerid !== 13 // 'Z-Não-usar'
+            ) {
+                console.log('Outside: ', data[i].dealerid);
                 const tempTest = [];
                 let customerCounter = 0;
 
