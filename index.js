@@ -25,9 +25,11 @@ const { accessLog, log } = require('./util/logs');
 const TELEMEDICINA = 'TELEMEDICINA';
 const FITANYWHERE = 'FITANYWHERE';
 const BIBLIOTECHIE = 'BIBLIOTECHIE';
+const COQUETEL = 'COQUETEL';
 const telemedicina = pool.query(TELEMEDICINA_QUERY, [TELEMEDICINA]);
 const fitanywhere = pool.query(TELEMEDICINA_QUERY, [FITANYWHERE]);
 const bibliotechie = pool.query(TELEMEDICINA_QUERY, [BIBLIOTECHIE]);
+const coquetel = pool.query(TELEMEDICINA_QUERY, [COQUETEL]);
 
 const LOGINSMS = process.env.loginSMS;
 const SECRETSMS = process.env.secretSMS;
@@ -42,6 +44,7 @@ const REPORTURBANTV = 88;
 const TELEMEDICINAREPORT = 263;
 const FITANYWHEREREPORT = 286;
 const BIBLIOTECHIEREPORT = 285;
+const COQUETELREPORT = 311;
 
 const getFitanywhereData = () =>
     getReport(
@@ -61,6 +64,13 @@ const getTelemedicinaData = () =>
     getReport(
         SMSURL + REPORT,
         smsBody(TELEMEDICINAREPORT),
+        smsHeader(getToken(LOGINSMS, SECRETSMS))
+    );
+
+const getCoquetelData = () =>
+    getReport(
+        SMSURL + REPORT,
+        smsBody(COQUETELREPORT),
         smsHeader(getToken(LOGINSMS, SECRETSMS))
     );
 
@@ -115,10 +125,12 @@ const getDealersData = () =>
         const telemedicinaActive = await telemedicina;
         const bibliotechieActive = await bibliotechie;
         const fitanywhereActive = await fitanywhere;
+        const coquetelActive = await coquetel;
 
         const telemedicinaSubscribed = await getTelemedicinaData();
         const fitanywhereSubscribed = await getFitanywhereData();
         const bibliotechieSubscribed = await getBibliotechieData();
+        const coquetelSubscribed = await getCoquetelData();
 
         const telemedicinaValidatedData = validateSvaData(
             telemedicinaActive.rows,
@@ -133,10 +145,16 @@ const getDealersData = () =>
             bibliotechieSubscribed.response.rows
         );
 
+        const coquetelValidatedData = validateSvaData(
+            coquetelActive.rows,
+            coquetelSubscribed.response.rows
+        );
+
         const svas = [
             { data: telemedicinaValidatedData, sva: TELEMEDICINA },
             { data: fitanywhereValidatedData, sva: FITANYWHERE },
             { data: bibliotechieValidatedData, sva: BIBLIOTECHIE },
+            { data: coquetelValidatedData, sva: COQUETEL },
         ];
         const groupedData = groupByDealerByCustomer(customers.response.rows);
         const validatedUrban = validationUrban(urban.response.rows);
