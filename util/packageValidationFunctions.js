@@ -507,6 +507,12 @@ function validateYplayExceptions(data) {
                     productCounterCustomers
                 );
                 break;
+            case 219: // INTERFACE NET TELECOM
+                addToProductCounterCustomers(
+                    data[index],
+                    productCounterCustomers
+                );
+                break;
             default:
                 break;
         }
@@ -669,6 +675,7 @@ function dealerValidation(customer) {
         customer.dealerid !== 235 && // CPW-TECNOLOGIA
         customer.dealerid !== 220 && // AZZA
         customer.dealerid !== 207 && // AVANZA
+        customer.dealerid !== 219 && // INTERFACE NET TELECOM
         customer.customers[0].products[0].vendorid !== 34
     ); // Yplay comlombia
 }
