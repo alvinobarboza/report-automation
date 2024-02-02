@@ -12,7 +12,7 @@ async function sendEmail(files) {
         const date = new Date().toLocaleString();
         const bodyHTML = require('./templateEmail');
 
-        await delay(15000);
+        await delay(60000);
 
         const emails = [
             'daniel.campos@youcast.tv.br',
@@ -27,8 +27,8 @@ async function sendEmail(files) {
         `;
 
         let transporter = nodemailer.createTransport({
-            host: 'smtp.youcast.tv.br',
-            port: 587,
+            host: 'mail.youcast.tv.br',
+            port: 465,
             auth: {
                 user: EMAIL,
                 pass: PASSWD,
